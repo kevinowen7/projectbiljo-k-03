@@ -18,14 +18,14 @@
 		<!-- Bootstrap Date-Time Picker CSS -->
 		<link href="css/bootstrap-datetimepicker.min.css" rel="stylesheet">
 		<link href="css/bootstrap-datepicker3.min.css" rel="stylesheet">
+		<!-- jQuery mobiscroll CSS -->
+		<link href="https://cdn.jsdelivr.net/npm/jtsage-datebox-bootstrap3@4.4.2/jtsage-datebox.min.css" rel="stylesheet">
 		<!-- jQuery Date Select -->
 		<link href="css/jquery.dateselect.css" rel="stylesheet">
 		<!-- jQuery UI -->
 		<link href="css/jquery-ui.css" rel="stylesheet">
 		<!-- jQuery gritter -->
 		<link href="css/jquery.gritter.css" rel="stylesheet">
-		<!-- jQuery mobiscroll CSS -->
-		<link href="css/mobiscroll.jquery.min.css" rel="stylesheet" >
 		<!-- Font awesome CSS -->
 		<link href="css/font-awesome.min.css" rel="stylesheet">	
 		<!-- Custom Color CSS -->
@@ -327,7 +327,7 @@
 													<div>
 														<div class="row">
 															<label>
-																<input id="bdate" class="form-control" placeholder="Please Select..."  required/>
+																<input id="bdate" class="form-control" placeholder="Please Select..."  required type="text" data-role="datebox" data-options='{"mode":"flipbox"}'>
 															</label>
 														</div>
 													</div>
@@ -646,7 +646,7 @@
 	    <script src="js/moment.min.js"></script>
 	    <script src="js/fullcalendar.min.js"></script>
 		<!-- mobiscroll -->
-		<script src="js/mobiscroll.jquery.min.js"></script>
+		<script src="https://cdn.jsdelivr.net/npm/jtsage-datebox-bootstrap3@4.4.2/jtsage-datebox.min.js" type="text/javascript"></script>
 		<!-- Respond JS for IE8 -->
 		<script src="js/respond.min.js"></script>
 		<!-- HTML5 Support for IE -->

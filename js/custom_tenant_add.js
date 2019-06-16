@@ -114,10 +114,10 @@ function reformatDate3(inputDate) {
 function reformatBirth(inputDate) {
 	
 	months=["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
-	inputBroke=inputDate.split("/");
-	inputDay=parseInt(inputBroke[1]);
-	inputMonth=parseInt(inputBroke[0]);
-	inputYear=inputBroke[2];
+	inputBroke=inputDate.split("-");
+	inputDay=parseInt(inputBroke[2]);
+	inputMonth=parseInt(inputBroke[1]);
+	inputYear=inputBroke[0];
 	outputDay=inputDay;
 	outputMonth=months[inputMonth-1];
 	outputYear=inputYear;
@@ -577,16 +577,8 @@ function uploadDB() {
 }
 
 $(document).ready(function() {
-	mobiscroll.settings = {
-		theme: 'ios'
-	};
 
-
-	$('#bdate').mobiscroll().date({
-		display: 'bubble',
-		touchUi: false
-	});
-
+	
 	//auto fill form with data
 	var id = window.location.href.split('=');
 	if (id[1] == undefined) {

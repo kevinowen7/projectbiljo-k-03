@@ -315,7 +315,6 @@ function countTotalBalance() {
 }
 
 function addInvoice() {
-	
 	//collect data from invoice form
 	var invoiceDate = reformatDate2($("#invoiceDate").val());
 	var invoiceAmount = rem_moneydot($("#invoiceAmount").val());
