@@ -597,6 +597,7 @@ function mailTenantKey(tenantID,roomID){
 	$("#cover-spin").fadeIn(250, function() {
 		$(this).removeClass("hide");
 	})
+	/*
 	//get tenant mail from firebase
 	trRef1=firebase.database().ref().child("tenant-room/"+tenantID);
 	trRef1.on('child_added', function(snapshot) {
@@ -653,7 +654,11 @@ function mailTenantKey(tenantID,roomID){
 			});
 		}
 	});
-	
+	*/
+	//stop loading
+	$("#cover-spin").fadeOut(250, function() {
+		$(this).hide();
+	})
 	return false;
 }
 
@@ -663,6 +668,7 @@ function sendEmail(tenantID,roomID,total,propAddr1){
 	$("#cover-spin").fadeIn(250, function() {
 		$(this).removeClass("hide");
 	})
+	/*
 	//get tenant mail from firebase
 	var getEmail = firebase.database().ref().child("tenant/"+tenantID);
 	getEmail.once('value', function(snapshot) {
@@ -710,6 +716,10 @@ function sendEmail(tenantID,roomID,total,propAddr1){
 			}
 		}
 	});
+	*/
+	$("#cover-spin").fadeOut(250, function() {
+		$(this).hide();
+	})
 	return false;
 }
 
@@ -788,7 +798,8 @@ $(document).ready(function() {
 			var statingDate=snapshot.child("start_date").val();
 			var propAddr=snapshot.child("prop_addr").val();
 			var statOccupy=snapshot.child("stat_occupy").val();
-			var refN=snapshot.child("ref_number").val().split(" ");
+			var refNumFormat = snapshot.child("ref_number").val();
+			var refN=refNumFormat.split(" ");
 			var refNumber=refN[0]+refN[1]+refN[2];
 			propAddr = shortenString(propAddr,20);
 			var tenantRef = firebase.database().ref().child("tenant/"+tenantID);
@@ -803,7 +814,7 @@ $(document).ready(function() {
 					newObj = {
 						"statOccupy":"approved",
 						"refNum":refNumber,
-						"content":[a,"<a href='tenant_approve.html?id="+refNumber+"' class='pull-left'>"+tenantName+"</a>",statingDate,propAddr,"<button id='approve_booking"+refNumber+"' class='btn btn-xs btn-success' title='Approve' onclick=approveBooking('booking"+refNumber+"') style='background-color:#c8bca6' disabled ><i class='fa fa-check'></i></button> <button id='removebutt' class='btn btn-xs btn-danger' title='Delete' onclick=deleteBooking('booking"+refNumber+"')><i class='fa fa-times'></i></button>"],
+						"content":[refNumFormat,"<a href='tenant_approve.html?id="+refNumber+"' class='pull-left'>"+tenantName+"</a>",statingDate,propAddr,"<button id='approve_booking"+refNumber+"' class='btn btn-xs btn-success' title='Approve' onclick=approveBooking('booking"+refNumber+"') style='background-color:#c8bca6' disabled ><i class='fa fa-check'></i></button> <button id='removebutt' class='btn btn-xs btn-danger' title='Delete' onclick=deleteBooking('booking"+refNumber+"')><i class='fa fa-times'></i></button>"],
 						"tenant_id":tenantID
 					}
 					listApproveT.push(newObj);
@@ -814,7 +825,7 @@ $(document).ready(function() {
 					newObj = {
 						"statOccupy":"booking",
 						"refNum":refNumber,
-						"content":[a,"<a href='tenant_approve.html?id="+refNumber+"' class='pull-left'>"+tenantName+"</a>",statingDate,propAddr,"<button id='approve_booking"+refNumber+"' class='btn btn-xs btn-success' title='Approve' onclick=approveBooking('booking"+refNumber+"')><i class='fa fa-check'></i></button> <button id='removebutt' class='btn btn-xs btn-danger' title='Delete' onclick=deleteBooking('booking"+refNumber+"')><i class='fa fa-times'></i></button>"],
+						"content":[refNumFormat,"<a href='tenant_approve.html?id="+refNumber+"' class='pull-left'>"+tenantName+"</a>",statingDate,propAddr,"<button id='approve_booking"+refNumber+"' class='btn btn-xs btn-success' title='Approve' onclick=approveBooking('booking"+refNumber+"')><i class='fa fa-check'></i></button> <button id='removebutt' class='btn btn-xs btn-danger' title='Delete' onclick=deleteBooking('booking"+refNumber+"')><i class='fa fa-times'></i></button>"],
 						"tenant_id":tenantID
 					}
 					listApproveT.push(newObj);
@@ -834,7 +845,8 @@ $(document).ready(function() {
 			var propAddr=snapshot.child("prop_addr").val();
 			propAddr = shortenString(propAddr,20);
 			var statOccupy=snapshot.child("stat_occupy").val();
-			var refN=snapshot.child("ref_number").val().split(" ");
+			var refNumFormat = snapshot.child("ref_number").val();
+			var refN=refNumFormat.split(" ");
 			var refNumber=refN[0]+refN[1]+refN[2];
 			var tenantRef = firebase.database().ref().child("tenant/"+tenantID);
 			var tenantName;

@@ -3,11 +3,13 @@ Designed by : http://responsivewebinc.com
 ************************/
 
 /* Basic CSS starts */
+@import url('https://fonts.googleapis.com/css?family=Poppins&display=swap');
 
 body{
 	font-size:12px;
 	line-height:24px;
 	-webkit-font-smoothing: antialiased;
+	font-family: 'Poppins', sans-serif;
 	background:#fafafa url("../img/main-back.png");
 }
 

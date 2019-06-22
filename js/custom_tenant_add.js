@@ -182,6 +182,7 @@ function uploadDB() {
 	//listen value to reach threshold
 	$("#thresholdCounter").change(function() {
 		if ($(this).val() == "6") { //wait until finish uploading
+			/*
 			//send email
 			var ref = $("#roomid").html()+$("#tenantno").html();
 			var ref = ref.split(" ")[0]+ref.split(" ")[1]+ref.split(" ")[2];
@@ -239,7 +240,29 @@ function uploadDB() {
 					}
 				}
 			}
-			
+			*/
+			//stop loading
+			$("#cover-spin").fadeOut(250, function() {
+				$(this).hide();
+			})
+			//stop threshold listener
+			$("#thresholdCounter").off();
+			//success notification
+			$.gritter.add({
+				title: 'Tenant Added',
+				text: 'Tenant was successfully added to the database.',
+				image: './img/bell.png',
+				sticky: false,
+				time: 3500,
+				class_name: 'gritter-custom'
+			});
+			//stop loading icon
+			$("#loadingUpload").fadeOut(250, function() {
+				$(this).hide();
+			});
+			setTimeout(function() {
+				window.location="home.html";
+			}, 1200);
 		}
 	});
 	

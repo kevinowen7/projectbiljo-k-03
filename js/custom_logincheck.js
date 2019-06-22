@@ -32,15 +32,6 @@ firebase.auth().onAuthStateChanged(function(user) {
 			} else if (userstat == 1) {
 				document.getElementById("nama").innerText = email_id;
 				
-				//RegExp untuk search tenant
-				$('#searchbar').keyup(function() {
-				  var foo = $(this).val().split(" ").join(""); // remove hyphens
-				  if (foo.length > 0) {
-					foo = foo.match(new RegExp('.{1,3}', 'g')).join(" ");
-				  }
-				  $(this).val(foo);
-				});
-				
 				if (userpriv == 1) {
 					$("#admManage").removeClass("hidden");
 				}	
