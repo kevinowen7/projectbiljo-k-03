@@ -315,11 +315,16 @@ function countTotalBalance() {
 }
 
 function addInvoice() {
+	// ref number
+	refNumberHtml = $("#tenant_id").html();
+	refNumberHtml=refNumberHtml.split(" ");
+	refNumberHtml=refNumberHtml[0]+refNumberHtml[1]+refNumberHtml[2];
 	//collect data from invoice form
 	var invoiceDate = reformatDate2($("#invoiceDate").val());
 	var invoiceAmount = rem_moneydot($("#invoiceAmount").val());
 	var invoiceDetails = $("#invoiceDetails").val();
 	var invoiceDetailsOther = $("#invoiceDetailsOther").val();
+	paymentRef = firebase.database().ref().child("payment/"+id);
 	if (invoiceDetails == "rentdue") {
 		var invoiceDetailsFull = "Rental Due";
 	} else if (invoiceDetails == "finedue") {
@@ -333,22 +338,14 @@ function addInvoice() {
 	}
 	var invoiceRecurrent = $("#invoiceRecurrent").val(); 
 	//standard invoice
-	ledgerList.push({
+	paymentRef.push({
 		"date":invoiceDate,
 		"desc":invoiceDetailsFull,
 		"invoice":invoiceAmount,
-		"payment":null
+		"payment":null,
+		"refnumber":refNumberHtml,
+		"list":"ledgerList"
 	});
-	ledgerList = sortArrayByDate(ledgerList);
-	table1.clear();
-	for (x in ledgerList) {
-		table1.row.add([reformatDate(ledgerList[x].date),ledgerList[x].desc,ledgerList[x].invoice,ledgerList[x].payment,null]);	
-	}
-	table1.draw();
-	countTotalDue();
-	countTotalReceived();
-	countBalance();
-	countTotalBalance();
 	setTimeout(function(){
 		//stop loading icon
 		$("#cover-spin").fadeOut(250, function() {
@@ -409,438 +406,488 @@ function addPayment() {
 	} else {
 		var paymentDetailsFull = "Other Payment - "+paymentDetailsOther;
 	}
-	if (paymentDetails == "bondpay") { //bond money payment
-		if (bondWaitDue-paymentAmount < 0) {
-			if (bondWaitDue != 0) {
-				var bondLeft = paymentAmount-bondWaitDue;
-				paymentRef.push({
-					"date":paymentDate,
-					"desc":"Bond Money Deposit",
-					"invoice":null,
-					"payment":bondWaitDue,
-					"refnumber":refNumberHtml,
-					"list":"bondList"
-				});
+	
+	//start set payment
+	var trRef1 = firebase.database().ref().child("tenant-room/"+id);
+	trRef1.once('child_added', function(snapshot) {
+		//mengambil bond price
+		var bondPrice=snapshot.child("rent_bond").val();
+		
+		paymentRef.once('value', function(snapshot) {
+			//mengambil bondWaitDue
+			var bondWaitDue=snapshot.child("bondWaitDue").val();
+			//jika belum selesai pembayaran bondwaitdue
+			if (bondWaitDue==null){
+				bondWaitDue = bondPrice;
+			} else {
+				bondWaitDue = bondWaitDue;
+			}
+			if (paymentDetails == "bondpay") { //bond money payment
+				if (bondWaitDue-paymentAmount < 0) {
+					if (bondWaitDue != 0) {
+						var bondLeft = paymentAmount-bondWaitDue;
+						paymentRef.push({
+							"date":paymentDate,
+							"desc":"Bond Money Deposit",
+							"invoice":null,
+							"payment":bondWaitDue,
+							"refnumber":refNumberHtml,
+							"list":"bondList"
+						});
+						paymentRef.push({
+							"date":paymentDate,
+							"desc":paymentDetailsFull,
+							"invoice":null,
+							"payment":bondWaitDue,
+							"refnumber":refNumberHtml,
+							"list":"ledgerList"
+						});
+						if (bondLeft != 0) {
+							paymentRef.push({
+								"date":paymentDate,
+								"desc":"Rental Payment",
+								"invoice":null,
+								"payment":bondLeft,
+								"refnumber":refNumberHtml,
+								"list":"ledgerList"
+							});
+						}
+						bondWaitDue = 0;
+						//set bond wait due
+						paymentRef.update({
+							"bondWaitDue" : bondWaitDue
+						});
+						
+					} else {
+						paymentRef.push({
+							"date":paymentDate,
+							"desc":"Rental Payment",
+							"invoice":null,
+							"payment":paymentAmount,
+							"refnumber":refNumberHtml,
+							"list":"ledgerList"
+						});
+					}
+				} else {
+					bondWaitDue -= paymentAmount;
+					//set bond wait due
+					paymentRef.update({
+						"bondWaitDue" : bondWaitDue
+					});
+					paymentRef.push({
+						"date":paymentDate,
+						"desc":"Bond Money Deposit",
+						"invoice":null,
+						"payment":paymentAmount,
+						"refnumber":refNumberHtml,
+						"list":"bondList"
+					});
+					paymentRef.push({
+						"date":paymentDate,
+						"desc":paymentDetailsFull,
+						"invoice":null,
+						"payment":paymentAmount,
+						"refnumber":refNumberHtml,
+						"list":"ledgerList"
+					});
+				}
+			} else if (paymentDetails == "transfer") { //bond money transfer
+				if (bondWaitDue > 0) {
+					if (bondWaitDue-paymentAmount < 0) {
+						if (bondWaitDue != 0) {
+							var bondLeft = paymentAmount-bondWaitDue;
+							paymentRef.push({
+								"date":paymentDate,
+								"desc":"Bond Money Deposit",
+								"invoice":null,
+								"payment":bondWaitDue,
+								"refnumber":refNumberHtml,
+								"list":"bondList"
+							});
+							paymentRef.push({
+								"date":paymentDate,
+								"desc":"Bond Money Payment",
+								"invoice":null,
+								"payment":bondWaitDue,
+								"refnumber":refNumberHtml,
+								"list":"ledgerList"
+							});
+							if (bondLeft != 0) {
+								paymentRef.push({
+									"date":paymentDate,
+									"desc":"Rental Payment",
+									"invoice":null,
+									"payment":bondLeft,
+									"refnumber":refNumberHtml,
+									"list":"ledgerList"
+								});
+							}
+							bondWaitDue = 0;
+							//set bond wait due
+							paymentRef.update({
+								"bondWaitDue" : bondWaitDue
+							});
+						} else {
+							paymentRef.push({
+								"date":paymentDate,
+								"desc":"Rental Payment",
+								"invoice":null,
+								"payment":paymentAmount,
+								"refnumber":refNumberHtml,
+								"list":"ledgerList"
+							});
+						}
+					} else {
+						bondWaitDue -= paymentAmount;
+						//set bond wait due
+						paymentRef.update({
+							"bondWaitDue" : bondWaitDue
+						});
+						paymentRef.push({
+							"date":paymentDate,
+							"desc":"Bond Money Deposit",
+							"invoice":null,
+							"payment":paymentAmount,
+							"refnumber":refNumberHtml,
+							"list":"bondList"
+						});
+						paymentRef.push({
+							"date":paymentDate,
+							"desc":"Bond Money Payment",
+							"invoice":null,
+							"payment":paymentAmount,
+							"refnumber":refNumberHtml,
+							"list":"ledgerList"
+						});
+					}
+				} else {
+					paymentRef.push({
+						"date":paymentDate,
+						"desc":paymentDetailsFull,
+						"invoice":paymentAmount,
+						"payment":null,
+						"refnumber":refNumberHtml,
+						"list":"bondList"
+					});
+					paymentRef.push({
+						"date":paymentDate,
+						"desc":paymentDetailsFull,
+						"invoice":null,
+						"payment":paymentAmount,
+						"refnumber":refNumberHtml,
+						"list":"ledgerList"
+					});
+				}
+			} else if (paymentDetails == "refund") { //bond money refund
+				if (bondWaitDue > 0) {
+					if (bondWaitDue-paymentAmount < 0) {
+						if (bondWaitDue != 0) {
+							var bondLeft = paymentAmount-bondWaitDue;
+							paymentRef.push({
+								"date":paymentDate,
+								"desc":"Bond Money Deposit",
+								"invoice":null,
+								"payment":bondWaitDue,
+								"refnumber":refNumberHtml,
+								"list":"bondList"
+							});
+							paymentRef.push({
+								"date":paymentDate,
+								"desc":"Bond Money Payment",
+								"invoice":null,
+								"payment":bondWaitDue,
+								"refnumber":refNumberHtml,
+								"list":"ledgerList"
+							});
+							if (bondLeft != 0) {
+								paymentRef.push({
+									"date":paymentDate,
+									"desc":"Rental Payment",
+									"invoice":null,
+									"payment":bondLeft,
+									"refnumber":refNumberHtml,
+									"list":"ledgerList"
+								});
+							}
+							bondWaitDue = 0;
+							//set bond wait due
+							paymentRef.update({
+								"bondWaitDue" : bondWaitDue
+							});
+						} else {
+							paymentRef.push({
+								"date":paymentDate,
+								"desc":"Rental Payment",
+								"invoice":null,
+								"payment":paymentAmount,
+								"refnumber":refNumberHtml,
+								"list":"ledgerList"
+							});
+						}
+					} else {
+						bondWaitDue -= paymentAmount;
+						//set bond wait due
+						paymentRef.update({
+							"bondWaitDue" : bondWaitDue
+						});
+						paymentRef.push({
+							"date":paymentDate,
+							"desc":"Bond Money Deposit",
+							"invoice":null,
+							"payment":paymentAmount,
+							"refnumber":refNumberHtml,
+							"list":"bondList"
+						});
+						paymentRef.push({
+							"date":paymentDate,
+							"desc":"Bond Money Payment",
+							"invoice":null,
+							"payment":paymentAmount,
+							"refnumber":refNumberHtml,
+							"list":"ledgerList"
+						});
+					}
+				} else {
 				paymentRef.push({
 					"date":paymentDate,
 					"desc":paymentDetailsFull,
-					"invoice":null,
-					"payment":bondWaitDue,
+					"invoice":paymentAmount,
+					"payment":null,
 					"refnumber":refNumberHtml,
-					"list":"ledgerList"
+					"list":"bondList"
 				});
-				if (bondLeft != 0) {
 					paymentRef.push({
 						"date":paymentDate,
-						"desc":"Rental Payment",
+						"desc":paymentDetailsFull,
 						"invoice":null,
-						"payment":bondLeft,
+						"payment":paymentAmount,
+						"refnumber":refNumberHtml,
+						"list":"ledgerList"
+					});
+					paymentRef.push({
+						"date":paymentDate,
+						"desc":"Bond Money Withdraw",
+						"invoice":paymentAmount,
+						"payment":null,
 						"refnumber":refNumberHtml,
 						"list":"ledgerList"
 					});
 				}
-				bondWaitDue = 0;
-			} else {
-				paymentRef.push({
-					"date":paymentDate,
-					"desc":"Rental Payment",
-					"invoice":null,
-					"payment":paymentAmount,
-					"refnumber":refNumberHtml,
-					"list":"ledgerList"
-				});
-			}
-		} else {
-			bondWaitDue -= paymentAmount;
-			paymentRef.push({
-				"date":paymentDate,
-				"desc":"Bond Money Deposit",
-				"invoice":null,
-				"payment":paymentAmount,
-				"refnumber":refNumberHtml,
-				"list":"bondList"
-			});
-			paymentRef.push({
-				"date":paymentDate,
-				"desc":paymentDetailsFull,
-				"invoice":null,
-				"payment":paymentAmount,
-				"refnumber":refNumberHtml,
-				"list":"ledgerList"
-			});
-		}
-	} else if (paymentDetails == "transfer") { //bond money transfer
-		if (bondWaitDue > 0) {
-			if (bondWaitDue-paymentAmount < 0) {
-				if (bondWaitDue != 0) {
-					var bondLeft = paymentAmount-bondWaitDue;
-					paymentRef.push({
-						"date":paymentDate,
-						"desc":"Bond Money Deposit",
-						"invoice":null,
-						"payment":bondWaitDue,
-						"refnumber":refNumberHtml,
-						"list":"bondList"
-					});
-					paymentRef.push({
-						"date":paymentDate,
-						"desc":"Bond Money Payment",
-						"invoice":null,
-						"payment":bondWaitDue,
-						"refnumber":refNumberHtml,
-						"list":"ledgerList"
-					});
-					if (bondLeft != 0) {
+			} else { //other payment
+				if (bondWaitDue > 0) {
+					if (bondWaitDue-paymentAmount < 0) {
+						if (bondWaitDue != 0) {
+							var bondLeft = paymentAmount-bondWaitDue;
+							paymentRef.push({
+								"date":paymentDate,
+								"desc":"Bond Money Deposit",
+								"invoice":null,
+								"payment":bondWaitDue,
+								"refnumber":refNumberHtml,
+								"list":"bondList"
+							});
+							paymentRef.push({
+								"date":paymentDate,
+								"desc":"Bond Money Payment",
+								"invoice":null,
+								"payment":bondWaitDue,
+								"refnumber":refNumberHtml,
+								"list":"ledgerList"
+							});
+							if (bondLeft != 0) {
+								paymentRef.push({
+									"date":paymentDate,
+									"desc":"Rental Payment",
+									"invoice":null,
+									"payment":bondLeft,
+									"refnumber":refNumberHtml,
+									"list":"ledgerList"
+								});
+							}
+							bondWaitDue = 0;
+							//set bond wait due
+							paymentRef.update({
+								"bondWaitDue" : bondWaitDue
+							});
+						} else {
+							paymentRef.push({
+								"date":paymentDate,
+								"desc":"Rental Payment",
+								"invoice":null,
+								"payment":paymentAmount,
+								"refnumber":refNumberHtml,
+								"list":"ledgerList"
+							});
+						}
+					} else {
+						bondWaitDue -= paymentAmount;
+						//set bond wait due
+						paymentRef.update({
+							"bondWaitDue" : bondWaitDue
+						});
 						paymentRef.push({
 							"date":paymentDate,
-							"desc":"Rental Payment",
+							"desc":"Bond Money Deposit",
 							"invoice":null,
-							"payment":bondLeft,
+							"payment":paymentAmount,
+							"refnumber":refNumberHtml,
+							"list":"bondList"
+						});
+						paymentRef.push({
+							"date":paymentDate,
+							"desc":"Bond Money Payment",
+							"invoice":null,
+							"payment":paymentAmount,
 							"refnumber":refNumberHtml,
 							"list":"ledgerList"
 						});
 					}
-					bondWaitDue = 0;
 				} else {
 					paymentRef.push({
 						"date":paymentDate,
-						"desc":"Rental Payment",
+						"desc":paymentDetailsFull,
 						"invoice":null,
 						"payment":paymentAmount,
 						"refnumber":refNumberHtml,
 						"list":"ledgerList"
 					});
 				}
-			} else {
-				bondWaitDue -= paymentAmount;
-				paymentRef.push({
-					"date":paymentDate,
-					"desc":"Bond Money Deposit",
-					"invoice":null,
-					"payment":paymentAmount,
-					"refnumber":refNumberHtml,
-					"list":"bondList"
-				});
-				paymentRef.push({
-					"date":paymentDate,
-					"desc":"Bond Money Payment",
-					"invoice":null,
-					"payment":paymentAmount,
-					"refnumber":refNumberHtml,
-					"list":"ledgerList"
-				});
 			}
-		} else {
-			paymentRef.push({
-				"date":paymentDate,
-				"desc":paymentDetailsFull,
-				"invoice":paymentAmount,
-				"payment":null,
-				"refnumber":refNumberHtml,
-				"list":"bondList"
-			});
-			paymentRef.push({
-				"date":paymentDate,
-				"desc":paymentDetailsFull,
-				"invoice":null,
-				"payment":paymentAmount,
-				"refnumber":refNumberHtml,
-				"list":"ledgerList"
-			});
-		}
-	} else if (paymentDetails == "refund") { //bond money refund
-		if (bondWaitDue > 0) {
-			if (bondWaitDue-paymentAmount < 0) {
-				if (bondWaitDue != 0) {
-					var bondLeft = paymentAmount-bondWaitDue;
-					paymentRef.push({
-						"date":paymentDate,
-						"desc":"Bond Money Deposit",
-						"invoice":null,
-						"payment":bondWaitDue,
-						"refnumber":refNumberHtml,
-						"list":"bondList"
-					});
-					paymentRef.push({
-						"date":paymentDate,
-						"desc":"Bond Money Payment",
-						"invoice":null,
-						"payment":bondWaitDue,
-						"refnumber":refNumberHtml,
-						"list":"ledgerList"
-					});
-					if (bondLeft != 0) {
-						paymentRef.push({
-							"date":paymentDate,
-							"desc":"Rental Payment",
-							"invoice":null,
-							"payment":bondLeft,
-							"refnumber":refNumberHtml,
-							"list":"ledgerList"
-						});
-					}
-					bondWaitDue = 0;
-				} else {
-					paymentRef.push({
-						"date":paymentDate,
-						"desc":"Rental Payment",
-						"invoice":null,
-						"payment":paymentAmount,
-						"refnumber":refNumberHtml,
-						"list":"ledgerList"
-					});
-				}
-			} else {
-				bondWaitDue -= paymentAmount;
-				paymentRef.push({
-					"date":paymentDate,
-					"desc":"Bond Money Deposit",
-					"invoice":null,
-					"payment":paymentAmount,
-					"refnumber":refNumberHtml,
-					"list":"bondList"
-				});
-				paymentRef.push({
-					"date":paymentDate,
-					"desc":"Bond Money Payment",
-					"invoice":null,
-					"payment":paymentAmount,
-					"refnumber":refNumberHtml,
-					"list":"ledgerList"
-				});
-			}
-		} else {
-		paymentRef.push({
-			"date":paymentDate,
-			"desc":paymentDetailsFull,
-			"invoice":paymentAmount,
-			"payment":null,
-			"refnumber":refNumberHtml,
-			"list":"bondList"
-		});
-			paymentRef.push({
-				"date":paymentDate,
-				"desc":paymentDetailsFull,
-				"invoice":null,
-				"payment":paymentAmount,
-				"refnumber":refNumberHtml,
-				"list":"ledgerList"
-			});
-			paymentRef.push({
-				"date":paymentDate,
-				"desc":"Bond Money Withdraw",
-				"invoice":paymentAmount,
-				"payment":null,
-				"refnumber":refNumberHtml,
-				"list":"ledgerList"
-			});
-		}
-	} else { //other payment
-		if (bondWaitDue > 0) {
-			if (bondWaitDue-paymentAmount < 0) {
-				if (bondWaitDue != 0) {
-					var bondLeft = paymentAmount-bondWaitDue;
-					paymentRef.push({
-						"date":paymentDate,
-						"desc":"Bond Money Deposit",
-						"invoice":null,
-						"payment":bondWaitDue,
-						"refnumber":refNumberHtml,
-						"list":"bondList"
-					});
-					paymentRef.push({
-						"date":paymentDate,
-						"desc":"Bond Money Payment",
-						"invoice":null,
-						"payment":bondWaitDue,
-						"refnumber":refNumberHtml,
-						"list":"ledgerList"
-					});
-					if (bondLeft != 0) {
-						paymentRef.push({
-							"date":paymentDate,
-							"desc":"Rental Payment",
-							"invoice":null,
-							"payment":bondLeft,
-							"refnumber":refNumberHtml,
-							"list":"ledgerList"
-						});
-					}
-					bondWaitDue = 0;
-				} else {
-					paymentRef.push({
-						"date":paymentDate,
-						"desc":"Rental Payment",
-						"invoice":null,
-						"payment":paymentAmount,
-						"refnumber":refNumberHtml,
-						"list":"ledgerList"
-					});
-				}
-			} else {
-				bondWaitDue -= paymentAmount;
-				paymentRef.push({
-					"date":paymentDate,
-					"desc":"Bond Money Deposit",
-					"invoice":null,
-					"payment":paymentAmount,
-					"refnumber":refNumberHtml,
-					"list":"bondList"
-				});
-				paymentRef.push({
-					"date":paymentDate,
-					"desc":"Bond Money Payment",
-					"invoice":null,
-					"payment":paymentAmount,
-					"refnumber":refNumberHtml,
-					"list":"ledgerList"
-				});
-			}
-		} else {
-			paymentRef.push({
-				"date":paymentDate,
-				"desc":paymentDetailsFull,
-				"invoice":null,
-				"payment":paymentAmount,
-				"refnumber":refNumberHtml,
-				"list":"ledgerList"
-			});
-		}
-	}
 
-	/* //bond money payment
-	if ($("#paymentBond").prop("checked")) {
-		//bond money ledger
-		if (paymentDetails == "bondpay") { //payment
-			bondList.push({
-				"date":paymentDate,
-				"desc":"Bond Money Deposit",
-				"invoice":null,
-				"payment":paymentAmount
-			});
-		} else { //transfer & refund
-			bondList.push({
-				"date":paymentDate,
-				"desc":paymentDetailsFull,
-				"invoice":paymentAmount,
-				"payment":null
-			});
-		}
-		bondList = sortArrayByDate(bondList);
-		table.clear();
-		for (x in bondList) {
-			table.row.add([reformatDate(bondList[x].date),bondList[x].desc,bondList[x].invoice,bondList[x].payment,null]);	
-		}
-		table.draw();
-		countTotalBondDue();
-		countTotalBondReceived();
-		countBondBalance();
-		countTotalBondBalance();
-		//standard ledger
-		if (paymentDetails == "refund") { //refund
-			ledgerList.push({
-				"date":paymentDate,
-				"desc":paymentDetailsFull,
-				"invoice":null,
-				"payment":paymentAmount
-			});
-			ledgerList.push({
-				"date":paymentDate,
-				"desc":"Bond Money Withdraw",
-				"invoice":paymentAmount,
-				"payment":null
-			});
-		} else { //transfer & payment
-			ledgerList.push({
-				"date":paymentDate,
-				"desc":paymentDetailsFull,
-				"invoice":null,
-				"payment":paymentAmount
-			});
-		}
-		ledgerList = sortArrayByDate(ledgerList);
-		table1.clear();
-		for (x in ledgerList) {
-			table1.row.add([reformatDate(ledgerList[x].date),ledgerList[x].desc,ledgerList[x].invoice,ledgerList[x].payment,null]);	
-		}
-		table1.draw();
-		countTotalDue();
-		countTotalReceived();
-		countBalance();
-		countTotalBalance();
-	//standard payment
-	} else {
-		if (paymentDetails == "bondpay") { //payment
-			bondList.push({
-				"date":paymentDate,
-				"desc":"Bond Money Deposit",
-				"invoice":null,
-				"payment":paymentAmount
-			});
-			bondList = sortArrayByDate(bondList);
-			table.clear();
-			for (x in bondList) {
-				table.row.add([reformatDate(bondList[x].date),bondList[x].desc,bondList[x].invoice,bondList[x].payment,null]);	
-			}
-			table.draw();
-			countTotalBondDue();
-			countTotalBondReceived();
-			countBondBalance();
-			countTotalBondBalance();
-		}
-		ledgerList.push({
-			"date":paymentDate,
-			"desc":paymentDetailsFull,
-			"invoice":null,
-			"payment":paymentAmount
+			/* //bond money payment
+			if ($("#paymentBond").prop("checked")) {
+				//bond money ledger
+				if (paymentDetails == "bondpay") { //payment
+					bondList.push({
+						"date":paymentDate,
+						"desc":"Bond Money Deposit",
+						"invoice":null,
+						"payment":paymentAmount
+					});
+				} else { //transfer & refund
+					bondList.push({
+						"date":paymentDate,
+						"desc":paymentDetailsFull,
+						"invoice":paymentAmount,
+						"payment":null
+					});
+				}
+				bondList = sortArrayByDate(bondList);
+				table.clear();
+				for (x in bondList) {
+					table.row.add([reformatDate(bondList[x].date),bondList[x].desc,bondList[x].invoice,bondList[x].payment,null]);	
+				}
+				table.draw();
+				countTotalBondDue();
+				countTotalBondReceived();
+				countBondBalance();
+				countTotalBondBalance();
+				//standard ledger
+				if (paymentDetails == "refund") { //refund
+					ledgerList.push({
+						"date":paymentDate,
+						"desc":paymentDetailsFull,
+						"invoice":null,
+						"payment":paymentAmount
+					});
+					ledgerList.push({
+						"date":paymentDate,
+						"desc":"Bond Money Withdraw",
+						"invoice":paymentAmount,
+						"payment":null
+					});
+				} else { //transfer & payment
+					ledgerList.push({
+						"date":paymentDate,
+						"desc":paymentDetailsFull,
+						"invoice":null,
+						"payment":paymentAmount
+					});
+				}
+				ledgerList = sortArrayByDate(ledgerList);
+				table1.clear();
+				for (x in ledgerList) {
+					table1.row.add([reformatDate(ledgerList[x].date),ledgerList[x].desc,ledgerList[x].invoice,ledgerList[x].payment,null]);	
+				}
+				table1.draw();
+				countTotalDue();
+				countTotalReceived();
+				countBalance();
+				countTotalBalance();
+			//standard payment
+			} else {
+				if (paymentDetails == "bondpay") { //payment
+					bondList.push({
+						"date":paymentDate,
+						"desc":"Bond Money Deposit",
+						"invoice":null,
+						"payment":paymentAmount
+					});
+					bondList = sortArrayByDate(bondList);
+					table.clear();
+					for (x in bondList) {
+						table.row.add([reformatDate(bondList[x].date),bondList[x].desc,bondList[x].invoice,bondList[x].payment,null]);	
+					}
+					table.draw();
+					countTotalBondDue();
+					countTotalBondReceived();
+					countBondBalance();
+					countTotalBondBalance();
+				}
+				ledgerList.push({
+					"date":paymentDate,
+					"desc":paymentDetailsFull,
+					"invoice":null,
+					"payment":paymentAmount
+				});
+				ledgerList = sortArrayByDate(ledgerList);
+				table1.clear();
+				for (x in ledgerList) {
+					table1.row.add([reformatDate(ledgerList[x].date),ledgerList[x].desc,ledgerList[x].invoice,ledgerList[x].payment,null]);	
+				}
+				table1.draw();
+				countTotalDue();
+				countTotalReceived();
+				countBalance();
+				countTotalBalance();
+			} */
+			setTimeout(function(){
+				//stop loading icon
+				$("#cover-spin").fadeOut(250, function() {
+					$(this).hide();
+				})
+				//reset payment form
+				$('#addPaymentForm').trigger("reset");
+				$("#paymentDetailsOtherBlock").hide();
+				removeOptions(document.getElementById("paymentDetails"));
+				var optionElement1 = document.createElement("option");
+				var optionElement2 = document.createElement("option");
+				var optionElement3 = document.createElement("option");
+				var optionElement4 = document.createElement("option");
+				optionElement1.value = "rentpay";
+				optionElement1.innerHTML = "Rental Payment";
+				optionElement2.value = "finepay";
+				optionElement2.innerHTML = "Fine Payment";
+				optionElement3.value = "bondpay";
+				optionElement3.innerHTML = "Bond Money Payment";
+				optionElement4.value = "otherpay";
+				optionElement4.innerHTML = "Other Payment";
+				document.getElementById("paymentDetails").appendChild(optionElement1);
+				document.getElementById("paymentDetails").appendChild(optionElement2);
+				document.getElementById("paymentDetails").appendChild(optionElement3);
+				document.getElementById("paymentDetails").appendChild(optionElement4);
+				//success notification
+				$.gritter.add({
+					title: 'Payment Added',
+					text: 'Payment was successfully added to the database.',
+					image: './img/bell.png',
+					sticky: false,
+					time: 3500,
+					class_name: 'gritter-custom'
+				})
+			}, 1000);
 		});
-		ledgerList = sortArrayByDate(ledgerList);
-		table1.clear();
-		for (x in ledgerList) {
-			table1.row.add([reformatDate(ledgerList[x].date),ledgerList[x].desc,ledgerList[x].invoice,ledgerList[x].payment,null]);	
-		}
-		table1.draw();
-		countTotalDue();
-		countTotalReceived();
-		countBalance();
-		countTotalBalance();
-	} */
-	setTimeout(function(){
-		//stop loading icon
-		$("#cover-spin").fadeOut(250, function() {
-			$(this).hide();
-		})
-		//reset payment form
-		$('#addPaymentForm').trigger("reset");
-		$("#paymentDetailsOtherBlock").hide();
-		removeOptions(document.getElementById("paymentDetails"));
-		var optionElement1 = document.createElement("option");
-		var optionElement2 = document.createElement("option");
-		var optionElement3 = document.createElement("option");
-		var optionElement4 = document.createElement("option");
-		optionElement1.value = "rentpay";
-		optionElement1.innerHTML = "Rental Payment";
-		optionElement2.value = "finepay";
-		optionElement2.innerHTML = "Fine Payment";
-		optionElement3.value = "bondpay";
-		optionElement3.innerHTML = "Bond Money Payment";
-		optionElement4.value = "otherpay";
-		optionElement4.innerHTML = "Other Payment";
-		document.getElementById("paymentDetails").appendChild(optionElement1);
-		document.getElementById("paymentDetails").appendChild(optionElement2);
-		document.getElementById("paymentDetails").appendChild(optionElement3);
-		document.getElementById("paymentDetails").appendChild(optionElement4);
-		//success notification
-		$.gritter.add({
-			title: 'Payment Added',
-			text: 'Payment was successfully added to the database.',
-			image: './img/bell.png',
-			sticky: false,
-			time: 3500,
-			class_name: 'gritter-custom'
-		})
-	}, 1000);
-	
+	});
 }
 
 function extendTenant() {
@@ -1081,13 +1128,20 @@ $(document).ready(function() {
 				"invoice":bondPrice,
 				"payment":null
 			});
-			bondWaitDue += bondPrice;
+		
 			ledgerList.push({
 				"date":statingDate,
-				"desc":"Rental Due",
+				"desc":"Bond Money Due",
 				"invoice":bondPrice,
 				"payment":null
 			});
+			ledgerList.push({
+				"date":statingDate,
+				"desc":"Rental Due",
+				"invoice":rentPrice,
+				"payment":null
+			});
+			
 			
 			//sort bond
 			bondList = sortArrayByDate(bondList);
