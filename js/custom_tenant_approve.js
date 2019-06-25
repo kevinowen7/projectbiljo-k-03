@@ -49,6 +49,7 @@ function sumDate(hari,date){
 // send email
 function sendEmail(tenantID,roomID,total,propAddr1){
 	//get tenant mail from firebase
+	/*
 	var getEmail = firebase.database().ref().child("tenant/"+tenantID);
 	getEmail.once('value', function(snapshot) {
 		// membaca target , subject , pesan, no kamar
@@ -83,6 +84,13 @@ function sendEmail(tenantID,roomID,total,propAddr1){
 				});
 			}
 		}
+	});
+	*/
+	$("#approveText").html("APPROVED");
+	$("#loadingApprove").hide();
+	$("#approveText").show();
+	$("#approveButt").fadeIn(250, function() {
+		$(this).show();
 	});
 	return false;
 }

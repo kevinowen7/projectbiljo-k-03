@@ -954,10 +954,9 @@ $(document).ready(function() {
 	
 	//key list
 	var table6 = $('#keyC-list').DataTable({
-		"aLengthMenu": [[10, 20, -1], [10, 20, "All"]],
-        "iDisplayLength": -1,
-		"sPaginationType": "full_numbers",
-		"order": [[ 0, "asc" ]],
+		"aLengthMenu": [[3, 6, -1], [3, 6, "All"]],
+		"iDisplayLength": 3,
+		"order": [[ 2, "desc" ]],
 		"columnDefs": [
 		{
 			targets: 0,
@@ -1041,9 +1040,8 @@ $(document).ready(function() {
 	
 	//overdue
 	var table2 = $('#overdue-list').DataTable({
-		"aLengthMenu": [[10, 20, -1], [10, 20, "All"]],
-        "iDisplayLength": -1,
-		"sPaginationType": "full_numbers",
+		"aLengthMenu": [[3, 6, -1], [3, 6, "All"]],
+		"iDisplayLength": 3,
 		"order": [[ 0, "asc" ]],
 		"columnDefs": [
 		{
@@ -1059,9 +1057,8 @@ $(document).ready(function() {
 	
 	//almost expired
 	var table3 = $('#aexpired-list').DataTable({
-		"aLengthMenu": [[10, 20, -1], [10, 20, "All"]],
-        "iDisplayLength": -1,
-		"sPaginationType": "full_numbers",
+		"aLengthMenu": [[3, 6, -1], [3, 6, "All"]],
+		"iDisplayLength": 3,
 		"order": [[ 0, "asc" ]],
 		"columnDefs": [
 		{
@@ -1077,9 +1074,8 @@ $(document).ready(function() {
 	
 	//imcomplete tenant
 	var table4 = $('#incomplete-list').DataTable({
-		"aLengthMenu": [[10, 20, -1], [10, 20, "All"]],
-        "iDisplayLength": -1,
-		"sPaginationType": "full_numbers",
+		"aLengthMenu": [[3, 6, -1], [3, 6, "All"]],
+		"iDisplayLength": 3,
 		"order": [[ 0, "asc" ]],
 		"columnDefs": [
 		{
