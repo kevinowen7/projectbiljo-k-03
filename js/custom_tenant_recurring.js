@@ -23,7 +23,7 @@ $(document).ready(function() {
 			targets: -1,
 			width: "15%",
 			orderable: false,
-			defaultContent:"<button id='removebutt' class='btn btn-xs btn-danger' title='Remove'><i class='fa fa-trash'></i></button>"
+			defaultContent:"<button id='removebutt' class='btn btn-xs btn-danger' title='Stop'><i class='fa fa-stop'></i></button>"
 		}
 		]
 	})

@@ -2081,10 +2081,10 @@ ul.nav-tabs  li a{
 }
 
 .page-tables table#data-table thead th{
-	padding:7px 10px;
+	padding:7px 8px;
 	font-weight:normal;
 	border-bottom:0px;
-	font-size:15px;
+	font-size:13px;
 	font-weight: bold;
 }
 

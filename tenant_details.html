@@ -8,7 +8,9 @@
 		<meta name="keywords" content="Your,Keywords">
 		<meta name="author" content="ResponsiveWebInc">
 		<script src="js/firebase.js"></script> <!-- version 5.3.1 -->
-    	<script src="js/firebase_config.js"></script>
+			<script src="js/firebase_config.js"></script>
+			<script type="text/javascript" src="js/date.js"></script>
+			<script type="text/javascript" src="js/date-en-US.js"></script>
 		
 		<meta name="viewport" content="width=device-width, initial-scale=1.0">
 		
@@ -32,6 +34,7 @@
 		<link href="css/less-style.css" rel="stylesheet">	
 		<!-- Custom CSS -->
 		<link href="css/style.css" rel="stylesheet">
+		<link href="css/custom_tenant_details.css" rel="stylesheet">
 		<style>
 		.dataTables_wrapper .dataTables_length {
 			float: right;
@@ -365,7 +368,7 @@
 																</div>
 															</div>
 															<div class="form-group" style="margin:0px -15px;">
-																<label for="payment" class="control-label col-lg-3">Transaction</label>
+																<label for="payment" class="control-label col-lg-3">Payment</label>
 																<div class="col-lg-9">
 																	<div class="checkbox">
 																		<span id="payment" name="payment"></span>
@@ -385,10 +388,21 @@
 										<!-- end isi tab 1 -->
 										<!-- isi tab 2 -->
 										<div class="tab-pane fade" id="ledger">
-											<h4><a href="tenant_recurring.html" class="pull-right" style="margin-top:10px;"><u>Recurring invoice</u></a></h4>
-											<div id="btnpayin" style="margin-top:5px;margin-bottom:5px;">
-												<button id="invoiceb" type="button" class="btn btn-primary"><i class="fa fa-plus"></i> Invoice</button>
-												<button id="paymentb" type="button" class="btn btn-success"><i class="fa fa-plus"></i> Transaction</button>
+											<div class="row">
+											<div class="col-lg-4">
+												<div id="btnpayin" style="margin-top:5px;margin-bottom:5px;">
+													<button id="invoiceb" type="button" class="btn btn-primary"><i class="fa fa-plus"></i> Invoice</button>
+													<button id="paymentb" type="button" class="btn btn-success"><i class="fa fa-plus"></i> Transaction</button>
+												</div>
+											</div>
+											<div class="col-lg-4">
+												<select id="filter" name="filter" class="form-control">
+													<option value="All">All</option>
+													<option value="Credit">Credit</option>
+													<option value="Debit">Debit</option>
+												</select>
+											</div>
+											<h4><a class="pull-right" style="margin-top:10px;" href="javaScript:void(0);"><u>Recurring invoice</u></a></h4>
 											</div>
 											<h3 style="margin-bottom:20px;">Bond Money Ledger</h3>
 											<div class="page-tables" style="margin-bottom:5px;">
@@ -603,7 +617,7 @@
 								<label for="extendPropAddr" class="control-label col-lg-3">Property Address</label>
 								<div class="col-lg-8">
 									<div class="checkbox">
-										<span id="extendPropAddr" name="extendPropAddr">Jl. Skipper No. 15 RT 12 RW 23, Nigga, What, Jakarta Pusat, DKI Jakarta 12345</span>
+										<span id="extendPropAddr" name="extendPropAddr"></span>
 									</div>
 								</div>
 							</div>
@@ -679,29 +693,35 @@
 							</div>
 							<div class="form-group" style="margin:0px -10px;">
 								<label for="extendIntend" class="control-label col-lg-3">Intended Length of Stay</label>
-								<div class="col-lg-5">
+								<div class="intendedLength">
+								<div class="col-md-2 angka" >
+									<input type="text" style="width: 100%" name="inputAngka" maxlength="2" type="number">
+								</div>
+								<div class="col-md-4 jenis">
 									<select id="extendIntend" name="extendIntend" class="form-control" required>
 										<option value="">Select Contract Option</option>
-										<option value="6">6 Months</option>
-										<option value="12">12 Months</option>
-										<option value="18">18 Months</option>
-										<option value="24">24 Months</option>
-										<option value="30">30 Months</option>
-										<option value="36">36 Months</option>
+										<option value="day">Day</option>
+										<option value="month">Month</option>
+										<option value="year">Year</option>
+										
 									</select>
 								</div>
+								<div class="col-md-2 checklist">
+									<input id="ongoing" name="ongoing" type="checkbox"> Ongoing
+								</div>
 							</div>
-							<div class="form-group" style="margin:0px -10px;">
+							</div>
+							<div class="form-group" style="margin:0px -10px;" >
 								<label for="startDate" class="control-label col-lg-3">Starting Date</label>
 								<div class="col-lg-2">
 									<div class="checkbox">
-										<span id="startDate" name="period"></span>
+										<span id="ExtendstartDate" name="period"></span>
 									</div>
 								</div>
 								<label for="endDate" class="control-label col-lg-3">End Date</label>
 								<div class="col-lg-2">
 									<div class="checkbox">
-										<span id="endDate" name="period">-</span>
+										<span id="ExtendendDate" name="period">-</span>
 									</div>
 								</div>
 							</div>
@@ -758,6 +778,7 @@
 		<script src="js/custom.js"></script>
 		<script src="js/custom_logincheck.js"></script>
 		<script src="js/custom_tenant_details.js"></script>
+		<script src="js/get_data_overdue.js"></script>
 		<script>
 		$('#invoiceDatePicker').datepicker({
 			format: "dd-M-yy",

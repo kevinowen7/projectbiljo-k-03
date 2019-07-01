@@ -12,6 +12,10 @@ var table1 = $('#booking-list').DataTable({
 		targets: 0,
 		width: "10%",
 		orderable:false
+	},
+	{
+		targets: 1,
+		className: 'dt-body-left'
 	}
 	]
 })	
@@ -956,7 +960,7 @@ $(document).ready(function() {
 	var table6 = $('#keyC-list').DataTable({
 		"aLengthMenu": [[3, 6, -1], [3, 6, "All"]],
 		"iDisplayLength": 3,
-		"order": [[ 2, "desc" ]],
+		"order": [],
 		"columnDefs": [
 		{
 			targets: 0,
@@ -998,7 +1002,7 @@ $(document).ready(function() {
 				trRef2=firebase.database().ref().child("tenant/"+tenantID);
 				trRef2.once('value', function(snapshot) {
 					var name = snapshot.child("full_name").val();
-					table6.row.add(["<a href='javaScript:void(0)' class='pull-left'>"+name+"</a>",refN,statingDate,"<a href='#' ondblclick='editKeyCollectDateModal(\""+keyDate+"\",\""+tenantID+"\",\""+refNumber+"\",\""+note1+"\")'>"+keyDate+" "+noteIcon+"</a>","<button class='btn btn-xs btn-success' title='Mail Tenant' onclick=mailTenantKey('"+tenantID+"','"+refNumber+"')><i class='fa fa-envelope'></i></button> <button class='btn btn-xs btn-primary' title='Collected' onclick=collectedKey('"+tenantID+"','"+refNumber+"')><i class='fa fa-check'></i></button>"]).node().id = "key"+tenantID;
+					table6.row.add(["<a href='tenant_details.html?id="+tenantID+"' class='pull-left'>"+name+"</a>",refN,statingDate,"<a href='#' ondblclick='editKeyCollectDateModal(\""+keyDate+"\",\""+tenantID+"\",\""+refNumber+"\",\""+note1+"\")'>"+keyDate+" "+noteIcon+"</a>","<button class='btn btn-xs btn-success' title='Mail Tenant' onclick=mailTenantKey('"+tenantID+"','"+refNumber+"')><i class='fa fa-envelope'></i></button> <button class='btn btn-xs btn-primary' title='Collected' onclick=collectedKey('"+tenantID+"','"+refNumber+"')><i class='fa fa-check'></i></button>"]).node().id = "key"+tenantID;
 					table6.draw();
 					$(".tip").tip();
 				});
@@ -1042,7 +1046,7 @@ $(document).ready(function() {
 	var table2 = $('#overdue-list').DataTable({
 		"aLengthMenu": [[3, 6, -1], [3, 6, "All"]],
 		"iDisplayLength": 3,
-		"order": [[ 0, "asc" ]],
+		"order": [[ 2, "asc" ]],
 		"columnDefs": [
 		{
 			targets: 0,
@@ -1051,15 +1055,53 @@ $(document).ready(function() {
 		]
 	})
 	
-	table2.row.add(["<a href='javaScript:void(0)'>Aleksandra Hyde</a>","101 010 500","12/17/2018"]).node().id = 'over1';
-	table2.row.add(["<a href='javaScript:void(0)'>Amari O'Reilly</a>","101 020 100","10/09/2018"]).node().id = 'over2';
-	table2.draw();
+	// mengambil data yang approved atau occupy dari firebase ke dalam list
+	var overdueRef = firebase.database().ref().child("payment");
+	overdueRef.on('child_added', function(snapshot) {
+		var balance = snapshot.child("balance").val();
+		
+		//validasi jika balance balance !=0
+		if (balance>0){
+			var tenantID = snapshot.key;
+			overdueRef1 = firebase.database().ref().child("tenant-room/"+tenantID);
+			// child added
+			overdueRef1.on('child_added', function(snapshot) {
+				//ref id
+				var refN = snapshot.child("ref_number").val();
+				var statOccupy = snapshot.child("stat_occupy").val();
+				if ((statOccupy=="approved") ||(statOccupy=="active")){
+					overdueRef2=firebase.database().ref().child("tenant/"+tenantID);
+					overdueRef2.once('value', function(snapshot) {
+						var name = snapshot.child("full_name").val();
+						table2.row.add(["<a href='tenant_details.html?id="+tenantID+"'>"+name+"</a>",refN,"12/17/2018"]).node().id = 'over'+tenantID;
+						table2.draw();
+					});
+				}
+			});
+			// child changed
+			overdueRef1.on('child_changed', function(snapshot) {
+				var row = table2.row('#over'+tenantID);
+				row.remove();
+				//ref id
+				var refN = snapshot.child("ref_number").val();
+				var statOccupy = snapshot.child("stat_occupy").val();
+				if ((statOccupy=="approved") ||(statOccupy=="active")){
+					overdueRef2=firebase.database().ref().child("tenant/"+tenantID);
+					overdueRef2.once('value', function(snapshot) {
+						var name = snapshot.child("full_name").val();
+						table2.row.add(["<a href='tenant_details.html?id="+tenantID+"'>"+name+"</a>",refN,"12/17/2018"]).node().id = 'over'+tenantID;
+						table2.draw();
+					});
+				}
+			});
+		}
+	});
 	
 	//almost expired
 	var table3 = $('#aexpired-list').DataTable({
 		"aLengthMenu": [[3, 6, -1], [3, 6, "All"]],
 		"iDisplayLength": 3,
-		"order": [[ 0, "asc" ]],
+		"order": [[ 2, "desc" ]],
 		"columnDefs": [
 		{
 			targets: 0,
@@ -1541,6 +1583,19 @@ $(document).ready(function() {
 	$("#addPaymentModal").draggable({
 		handle: ".modal-header"
 	});
+	$("#addInvoiceModal").draggable({
+		handle: ".modal-header"
+	});
+	$("#approveModal").draggable({
+		handle: ".modal-header"
+	});
+	$("#editKeyDateModal").draggable({
+		handle: ".modal-header"
+	});
+	$("#rApproveModal").draggable({
+		handle: ".modal-header"
+	});
+
 	//payment modal add listener
 	$("#addPaymentButton").click(function() {
 		$("#addPaymentForm").submit();

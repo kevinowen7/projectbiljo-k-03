@@ -167,6 +167,7 @@ firebase.auth().onAuthStateChanged(function(user) {
 						var propAddr=snapshot.child("prop_addr").val();
 						var statOccupy=snapshot.child("stat_occupy").val();
 						var refN = snapshot.child("ref_number").val();
+						console.log(refN)
 						var refN1= refN.split(" ");
 						var refNumber=refN1[0]+refN[1]+refN[2];
 						// mengambil data tenant yang status nya approved atau active

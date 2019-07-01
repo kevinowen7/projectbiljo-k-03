@@ -106,7 +106,7 @@ function reformatDate2(inputDate) {
 	inputMonth=inputBroke[1];
 	inputYear=inputBroke[2];
 	if (parseInt(inputDay) < 10) {
-		outputDay = "0"+inputDay;
+		outputDay = inputDay;
 	} else {
 		outputDay = inputDay;
 	}
@@ -907,7 +907,7 @@ function extendTenant() {
 				<label for="period" class="control-label col-lg-3">Period</label>
 				<div class="col-lg-9">
 					<div class="checkbox">
-						<span id="period" name="period">${startDate} - ${endDate}</span>
+						<span id="period" name="period">`+startDate+`  -  `+endDate+`</span>
 					</div>
 				</div>
 			</div>
@@ -923,7 +923,7 @@ function extendTenant() {
 				<label for="payment" class="control-label col-lg-3">Payment</label>
 				<div class="col-lg-9">
 					<div class="checkbox">
-						<span id="payment" name="payment">${rentPrice} paid ${payPlan} Electricity include /month</span>
+						<span id="payment" name="payment">${rentPrice} paid ${payPlan}   <span>Electricity</span> include /month</span>
 					</div>
 				</div>
 			</div>
@@ -1078,6 +1078,7 @@ $(document).ready(function() {
 	trRef1.on('child_added', function(snapshot) {
 		//get starting date , building address , status occupy , ref id
 		var statingDate=snapshot.child("start_date").val();
+		var payPlan=snapshot.child("pay_plan").val();
 		var propAddr=snapshot.child("prop_addr").val();
 		var statOccupy=snapshot.child("stat_occupy").val();
 		var refN=snapshot.child("ref_number").val().split(" ");
@@ -1086,37 +1087,40 @@ $(document).ready(function() {
 		//mengambil rent price
 		var rentPrice=snapshot.child("rent_price").val();
 		$("#yearp").val(rentPrice);
-		$("#payment").html(get_fmoney(rentPrice)+" paid monthly Electricity include /month");
+		$("#payment").html(get_fmoney(rentPrice)+" paid "+payPlan+"  <strong>Electricity</strong> included /month");
 		//mengambil rent price
 		var sDate=snapshot.child("start_date").val();
 		
 		//mengambil bond price
 		var bondPrice=snapshot.child("rent_bond").val();
-		$("#bond").html(get_fmoney(bondPrice)+" paid monthly Electricity include /month");
+		$("#bond").html(get_fmoney(bondPrice)+" paid "+payPlan+"  <strong>Electricity</strong> included /month");
 		
 		//mengambil ctrt_opt
 		var kontrak=snapshot.child("ctrt_opt").val();
 		
 		// mengisi data pertama dari kontrak
 		var intend = parseInt(kontrak);
+
+		var myDate = new Date(statingDate);
+		var endDate = myDate.addMonths(intend).toString("M/d/yyyy");
 		
-		var startDate = sDate.split("/");
-		var startMonth = startDate[0];
-		var startDay = startDate[1];
-		var startYear = startDate[2];
-		var endMonth = parseInt(startMonth)+intend;
-		var endDay = parseInt(startDay);
-		var endYear = parseInt(startYear);
-		if (endMonth>12) {
-			var addYear = Math.trunc(endMonth/12);
-			endYear += addYear;
-			endMonth = endMonth%12;
-		}
-		var endDate = endMonth+"/"+endDay+"/"+endYear;
-		$("#period").html(reformatDate(sDate)+"-"+reformatDate(endDate));
+		// var startDate = sDate.split("/");
+		// var startMonth = startDate[0];
+		// var startDay = startDate[1];
+		// var startYear = startDate[2];
+		// var endMonth = parseInt(startMonth)+intend;
+		// var endDay = parseInt(startDay);
+		// var endYear = parseInt(startYear);
+		// if (endMonth>12) {
+		// 	var addYear = Math.trunc(endMonth/12);
+		// 	endYear += addYear;
+		// 	endMonth = endMonth%12;
+		// }
+		// var endDate = endMonth+"/"+endDay+"/"+endYear;
+		$("#period").html(reformatDate(sDate)+"  -  "+reformatDate(endDate));
 		// update next date (dummy)
 		$("#startDate").html(reformatDate(endDate));
-		
+		$("#ExtendstartDate").html(reformatDate(endDate));
 		// mengambil data tenant yang status nya approved atau active
 		if ((statOccupy=="approved") ||(statOccupy=="active")){
 			
@@ -1507,29 +1511,58 @@ $(document).ready(function() {
 	//extend modal intend listener
 	$("#extendIntend").on('change', function() {
 		if ($("#extendIntend").val() == "") {
-			$("#endDate").html("-");
+			$("#ExtendendDate").html("-");
 		} else {
 			var intend = parseInt($("#extendIntend").val());
-			var startDate = reformatDate2($("#startDate").html()).split("/");
-			var startMonth = startDate[0];
-			var startDay = startDate[1];
-			var startYear = startDate[2];
-			var endMonth = parseInt(startMonth)+intend;
-			var endDay = parseInt(startDay);
-			var endYear = parseInt(startYear);
-			if (endMonth>12) {
-				var addYear = Math.trunc(endMonth/12);
-				endYear += addYear;
-				endMonth = endMonth%12;
-			}
-			var endDate = endMonth+"/"+endDay+"/"+endYear;
-			$("#endDate").html(reformatDate(endDate));
+			var startDate = reformatDate2($("#ExtendstartDate").html());
+			// var startMonth = startDate[0];
+			// var startDay = startDate[1];
+			// var startYear = startDate[2];
+			// var endMonth = parseInt(startMonth)+intend;
+			// var endDay = parseInt(startDay);
+			// var endYear = parseInt(startYear);
+			// if (endMonth>12) {
+			// 	var addYear = Math.trunc(endMonth/12);
+			// 	endYear += addYear;
+			// 	endMonth = endMonth%12;
+			// }
+			// var endDate = endMonth+"/"+endDay+"/"+endYear;
+			var myDate = new Date(startDate);
+			var endDate = myDate.addMonths(intend).toString("M/d/yyyy");
+			$("#ExtendendDate").html(reformatDate(endDate));
+		
 		}
 	});
+	// if($("#ongoing").checked==true){
+	// 	$("input[name='inputAngka']").prop("disabled",true);
+	// }
+	$("#ongoing").on('change', function() {
+		if($('input#ongoing').is(':checked')){
+			$("input[name='inputAngka']").prop("disabled",true);
+			$("select[name='extendIntend']").prop("disabled",true);
+		}
+	else{
+		$("input[name='inputAngka']").prop("disabled",false);
+		$("select[name='extendIntend']").prop("disabled",false);
+	}})
+		
+	
+	//isi data di extend modal
+	var trRef1 = firebase.database().ref().child("tenant-room/"+id);
+	trRef1.once('child_added', function(snapshot) {
+		var address= snapshot.child("prop_addr").val();
+		$("#extendPropAddr").text(address);
+
+	})
+		
 	//extend modal extend listener
 	$("#extendButton").click(function() {
 		$("#extendForm").submit();
 	})
+	//extend modal draggable
+	$("#extendModal").draggable({
+		handle: ".modal-header"
+	});
 	//extend form validation
 	$("#extendForm").validate({
 		submitHandler: function() {
@@ -1540,6 +1573,96 @@ $(document).ready(function() {
 			extendTenant();
 		}
 	})
+	
+	
+	// filter onchange
+	$("#filter").change(function () {
+        var end = this.value;
+		if(end=="All"){
+			table.clear();
+			table1.clear();
+			//sort bond
+			bondList = sortArrayByDate(bondList);
+			for (x in bondList) {
+				table.row.add([reformatDate(bondList[x].date),bondList[x].desc,bondList[x].invoice,bondList[x].payment,null]);	
+			}
+			//sort ledger
+			ledgerList = sortArrayByDate(ledgerList);
+			for (x in ledgerList) {
+				table1.row.add([reformatDate(ledgerList[x].date),ledgerList[x].desc,ledgerList[x].invoice,ledgerList[x].payment,null]);	
+			}
+			table.draw();
+			table1.draw();
+			//menghitung total Bond
+			countTotalBondDue();
+			countTotalBondReceived();
+			countBondBalance();
+			countTotalBondBalance();
+			//menghitung total Ledger
+			countTotalDue();
+			countTotalReceived();
+			countBalance();
+			countTotalBalance();
+		} else if (end=="Debit"){
+			table.clear();
+			table1.clear();
+			//sort bond
+			bondList = sortArrayByDate(bondList);
+			for (x in bondList) {
+				if(bondList[x].invoice==null){
+					table.row.add([reformatDate(bondList[x].date),bondList[x].desc,bondList[x].invoice,bondList[x].payment,null]);	
+				}
+			}
+			//sort ledger
+			ledgerList = sortArrayByDate(ledgerList);
+			for (x in ledgerList) {
+				if(ledgerList[x].invoice==null){
+					table1.row.add([reformatDate(ledgerList[x].date),ledgerList[x].desc,ledgerList[x].invoice,ledgerList[x].payment,null]);	
+				}
+			}
+			table.draw();
+			table1.draw();
+			//menghitung total Bond
+			countTotalBondDue();
+			countTotalBondReceived();
+			countBondBalance();
+			countTotalBondBalance();
+			//menghitung total Ledger
+			countTotalDue();
+			countTotalReceived();
+			countBalance();
+			countTotalBalance();
+		} else if (end=="Credit"){
+			table.clear();
+			table1.clear();
+			//sort bond
+			bondList = sortArrayByDate(bondList);
+			for (x in bondList) {
+				if(bondList[x].payment==null){
+					table.row.add([reformatDate(bondList[x].date),bondList[x].desc,bondList[x].invoice,bondList[x].payment,null]);	
+				}
+			}
+			//sort ledger
+			ledgerList = sortArrayByDate(ledgerList);
+			for (x in ledgerList) {
+				if(ledgerList[x].payment==null){
+					table1.row.add([reformatDate(ledgerList[x].date),ledgerList[x].desc,ledgerList[x].invoice,ledgerList[x].payment,null]);	
+				}
+			}
+			table.draw();
+			table1.draw();
+			//menghitung total Bond
+			countTotalBondDue();
+			countTotalBondReceived();
+			countBondBalance();
+			countTotalBondBalance();
+			//menghitung total Ledger
+			countTotalDue();
+			countTotalReceived();
+			countBalance();
+			countTotalBalance();
+		}
+    });
 	
 	
 	//get data from payment database
