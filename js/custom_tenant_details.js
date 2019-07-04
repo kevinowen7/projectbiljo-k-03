@@ -34,7 +34,7 @@ var table1 = $('#sledger').DataTable({
 var bondList = [];
 var ledgerList = [];
 var bondWaitDue = 0;
-var historyperiod = 1;
+
 
 function removeOptions(selectbox) {
 	
@@ -337,6 +337,17 @@ function addInvoice() {
 		var invoiceDetailsFull = "Other Due - "+invoiceDetailsOther;
 	}
 	var invoiceRecurrent = $("#invoiceRecurrent").val(); 
+
+	paymentRef.once('value', function(snapshot){
+		var prevBalance = parseInt(snapshot.child("balance").val())
+		
+			paymentRef.update({
+				"balance": (prevBalance - invoiceAmount).toString()
+			})
+		
+	
+	})
+
 	//standard invoice
 	paymentRef.push({
 		"date":invoiceDate,
@@ -407,11 +418,38 @@ function addPayment() {
 		var paymentDetailsFull = "Other Payment - "+paymentDetailsOther;
 	}
 	
+	
+	paymentRef.once('value', function(snapshot){
+		if (snapshot.child("balance").val()==null){
+			var trRef1 = firebase.database().ref().child("tenant-room/"+id);
+			trRef1.once('child_added', function(snapshot) {
+				var bondPrice=snapshot.child("rent_bond").val();
+				var rent = snapshot.child("rent_price").val()
+				
+				paymentRef.set({
+					"balance": (paymentAmount-bondPrice-rent).toString()
+				})
+			
+			
+			})
+		}
+		else{
+		prevBalance = parseInt(snapshot.child("balance").val())
+			console.log("in")
+			paymentRef.update({
+				"balance": (prevBalance + paymentAmount).toString()
+			})
+		
+		}
+	})
+	
 	//start set payment
 	var trRef1 = firebase.database().ref().child("tenant-room/"+id);
 	trRef1.once('child_added', function(snapshot) {
 		//mengambil bond price
 		var bondPrice=snapshot.child("rent_bond").val();
+		
+		
 		
 		paymentRef.once('value', function(snapshot) {
 			//mengambil bondWaitDue
@@ -891,48 +929,84 @@ function addPayment() {
 }
 
 function extendTenant() {
-	
+	var historyperiod=0
+	var contract2 = firebase.database().ref().child("contract/"+id+"");
+        contract2.on('child_added', function(snapshot){
+            room_id=snapshot.key
+						var contract4 = firebase.database().ref().child("contract/"+id+"/"+room_id+"");
+						contract4.on('value', function(snapshot){
+							historyperiod=snapshot.child("historyperiod").val()
+						})
+						// contract4.on('child_added', function(snapshot){
+						// 	var bond = snapshot.child("bond").val()
+						// 	var ctrt_length=snapshot.child("ctrt_length").val()
+						// 	var ctrt_type = snapshot.child("ctrt_type").val()
+						// 	var payPlan = snapshot.child("payPlan").val()
+						// 	var refNumb = snapshot.child("refNumb").val()
+						// 	var rent=snapshot.child("rent").val()
+						// 	var start_date = snapshot.child("start_date").val()
+						// 	var end_date = snapshot.child("end_date").val()
+						// })
+				})
 	//collect data from form
 	historyperiod++;
+	var refNumber = $("#tenant_id").html();
 	var payPlan = $("#extendPayPlan").val();
 	var bondPrice = $("#fbond").html();
 	var rentPrice = $("#fprice").html();
-	var startDate = $("#startDate").html();
-	var endDate = $("#endDate").html();
-	//write to page
-	var theText = `
-		<div style="margin:15px 0px;"></div>
-		<div id="tenanthistoryperiod${historyperiod}" class="nav-tabs">
-			<div class="form-group" style="margin:0px -15px;">
-				<label for="period" class="control-label col-lg-3">Period</label>
-				<div class="col-lg-9">
-					<div class="checkbox">
-						<span id="period" name="period">`+startDate+`  -  `+endDate+`</span>
-					</div>
-				</div>
-			</div>
-			<div class="form-group" style="margin:0px -15px;">
-				<label for="bond" class="control-label col-lg-3">Bond</label>
-				<div class="col-lg-9">
-					<div class="checkbox">
-						<span id="bond" name="bond">${bondPrice} to be paid at the beginning of contract</span>
-					</div>
-				</div>
-			</div>
-			<div class="form-group" style="margin:0px -15px;">
-				<label for="payment" class="control-label col-lg-3">Payment</label>
-				<div class="col-lg-9">
-					<div class="checkbox">
-						<span id="payment" name="payment">${rentPrice} paid ${payPlan}   <span>Electricity</span> include /month</span>
-					</div>
-				</div>
-			</div>
-		</div>`;
-	$("#tenanthistory").append(theText);
-	//update data date (dummy)
-	$("#startDate").html(endDate);
-	$("#endDate").html('');
+	var startDate = $("#ExtendstartDate").html();
+	var endDate2 = $("#ExtendendDate").html();
+	if(endDate2=="Ongoing"){
+		ctrt_length="-"
+		ctrt_type="-"
+	}
+	else{
+		ctrt_length=$("#ExtendIntendAngka").val();
+		ctrt_type=$("#extendIntend").val()
+	}
+	if ($("#ExtendendDate").html()!="Ongoing"){
+		var endDate = reformatDate2($("#ExtendendDate").html());
+	}
+	else{
+		endDate = "Ongoing"
+	}
+	bondPrice2=bondPrice.split("Rp. ")[1]
+	bondPrice3=bondPrice2.split(",-")[0]
+	bondPrice4=bondPrice3.split(".")
+	bondPrice5=""
+	for (let index = 0; index < bondPrice4.length; index++) {
+		bondPrice5+=bondPrice4[index]	
+	}
+	bondPrice6=parseInt(bondPrice5)
+
+	rentPrice2=rentPrice.split("Rp. ")[1]
+	rentPrice3=rentPrice2.split(",-")[0]
+	rentPrice4=rentPrice3.split(".")
+	rentPrice5=""
+	for (let index = 0; index < rentPrice4.length; index++) {
+		rentPrice5+=rentPrice4[index]	
+	}
+	
 	$("#extendForm").trigger("reset");
+	
+
+	tenantid2=$("#tenant_id").html().substring(0,9)
+	tenantid3=tenantid2.split(" ")
+	tenantid4=tenantid3[0]+tenantid3[1]+tenantid3[2]
+	var contract = firebase.database().ref().child("contract/"+id+"/"+tenantid4+"");
+	contract.push({
+		"ctrt_length": ctrt_length,
+		"refNumb":refNumber,
+		"ctrt_type":ctrt_type,
+		"bond": bondPrice5,
+		"end_date":endDate,
+		"start_date":reformatDate2(startDate),
+		"payPlan":payPlan,
+		"rent":rentPrice5
+	})
+	contract.update({
+		"historyperiod":++historyperiod
+	})
 	//create due on ledger
 	/*
 	var bondPriceInt = parseInt($("#cfbond").val());
@@ -1015,63 +1089,70 @@ $(document).ready(function() {
 	//start
 	id2 = window.location.href.split('=')[1];
 	id = id2.split("#")[0];
-	var tenantNames = [
-		{
-			label: "Bea Curran",
-			tenantid: "t_1d",
-			refnumber: "101010100"
-		},
-		{
-			label: "Kevin Owen",
-			tenantid: "t_2d",
-			refnumber: "101010200"
-		},
-		{
-			label: "Briana Holloway",
-			tenantid: "t_3d",
-			refnumber: "101010300"
-		},
-		{
-			label: "Zakary Neville",
-			tenantid: "t_4d",
-			refnumber: "101010400"
-		},
-		{
-			label: "Aleksandra Hyde",
-			tenantid: "t_5d",
-			refnumber: "101010500"
-		},
-		{
-			label: "Amari O'Reilly",
-			tenantid: "t_6d",
-			refnumber: "101020100"
-		},
-		{
-			label: "Jan Garrison",
-			tenantid: "t_7d",
-			refnumber: "101020300"
-		},
-		{
-			label: "Kevin Owen",
-			tenantid: "t_8d",
-			refnumber: "102010200"
-		},
-		{
-			label: "Pamela Daugherty",
-			tenantid: "t_9d",
-			refnumber: "102010100"
-		},
-		{
-			label: "Vernon Kirkland",
-			tenantid: "t_10d",
-			refnumber: "101010101"
-		},
-		{
-			label: "Jacob Connolly",
-			tenantid: "t_11d",
-			refnumber: "102020100"
+	var tenantNames = [];
+	var historyperiod = 0
+	var contract = firebase.database().ref().child("contract/"+id+"");
+	contract.on('child_added', function(snapshot){
+		room_id=snapshot.key
+		var contract2 = firebase.database().ref().child("contract/"+id+"/"+room_id+"");
+		contract2.on('value',function(snapshot){
+			historyperiod=snapshot.child("historyperiod").val()
+		})
+	contract2.on('child_added', function(snapshot){
+		var payPlan = snapshot.child("payPlan").val();
+		var bondPrice = get_fmoney(snapshot.child("bond").val())
+		var rentPrice = get_fmoney(snapshot.child("rent").val())
+		var startDate = reformatDate(snapshot.child("start_date").val());
+			
+		if (snapshot.child("end_date").val()!="Ongoing"){
+			var endDate = reformatDate(snapshot.child("end_date").val());
+			endDate5=reformatDate2(endDate)
+			endDate2=new Date(endDate5)
+			endDate3=endDate2.addDays(1).toString("M/d/yyyy")	
+			endDate4=reformatDate(endDate3)
+			$("#ExtendstartDate").html(endDate4);														
 		}
-	];
+		else{
+			endDate = snapshot.child("end_date").val()
+			startDate=Date.today().toString("MM/dd/yyyy")
+			$("#ExtendstartDate").html(startDate);														
+		}	
+		// $("#yearp").val(rentPrice);
+		// $("#payment").html(rentPrice+" paid "+payPlan+"  <strong>Electricity</strong> included /month");
+		// $("#bond").html(bondPrice+" paid "+payPlan+"  <strong>Electricity</strong> included /month");
+		// $("#period").html(startDate+"  -  "+endDate);
+		data=`<div id="tenanthistoryperiod`+historyperiod+`" class="nav-tabs">
+		<div class="form-group" style="margin:0px -15px;">
+			<label for="period" class="control-label col-lg-3">Period</label>
+			<div class="col-lg-9">
+				<div class="checkbox">
+					<span id="period" name="period">`+startDate+` - `+endDate+`</span>
+				</div>
+			</div>
+		</div>
+		<div class="form-group" style="margin:0px -15px;">
+			<label for="bond" class="control-label col-lg-3">Bond</label>
+			<div class="col-lg-9">
+				<div class="checkbox">
+					<span id="bond" name="bond">`+bondPrice+`to be paid at the beginning of contract</span>
+				</div>
+			</div>
+		</div>
+		<div class="form-group" style="margin:0px -15px;">
+			<label for="payment" class="control-label col-lg-3">Payment</label>
+			<div class="col-lg-9">
+				<div class="checkbox">
+					<span id="payment" name="payment">`+rentPrice+`paid `+payPlan+`  <strong>Electricity</strong> included /month</span>
+				</div>
+			</div>
+		</div>
+	</div>
+</div>
+`
+$("#tenanthistory").append(data)
+
+	})
+})
 	
 	// mengambil data yang approved atau occupy dari firebase ke dalam list
 	var trRef1 = firebase.database().ref().child("tenant-room/"+id);
@@ -1086,23 +1167,9 @@ $(document).ready(function() {
 		
 		//mengambil rent price
 		var rentPrice=snapshot.child("rent_price").val();
-		$("#yearp").val(rentPrice);
-		$("#payment").html(get_fmoney(rentPrice)+" paid "+payPlan+"  <strong>Electricity</strong> included /month");
-		//mengambil rent price
-		var sDate=snapshot.child("start_date").val();
 		
 		//mengambil bond price
 		var bondPrice=snapshot.child("rent_bond").val();
-		$("#bond").html(get_fmoney(bondPrice)+" paid "+payPlan+"  <strong>Electricity</strong> included /month");
-		
-		//mengambil ctrt_opt
-		var kontrak=snapshot.child("ctrt_opt").val();
-		
-		// mengisi data pertama dari kontrak
-		var intend = parseInt(kontrak);
-
-		var myDate = new Date(statingDate);
-		var endDate = myDate.addMonths(intend).toString("M/d/yyyy");
 		
 		// var startDate = sDate.split("/");
 		// var startMonth = startDate[0];
@@ -1116,11 +1183,6 @@ $(document).ready(function() {
 		// 	endYear += addYear;
 		// 	endMonth = endMonth%12;
 		// }
-		// var endDate = endMonth+"/"+endDay+"/"+endYear;
-		$("#period").html(reformatDate(sDate)+"  -  "+reformatDate(endDate));
-		// update next date (dummy)
-		$("#startDate").html(reformatDate(endDate));
-		$("#ExtendstartDate").html(reformatDate(endDate));
 		// mengambil data tenant yang status nya approved atau active
 		if ((statOccupy=="approved") ||(statOccupy=="active")){
 			
@@ -1417,12 +1479,44 @@ $(document).ready(function() {
 	})
 	//extend modal payment plan listener
 	$("#extendPayPlan").on('change', function() {
-		var yearPr = $("#yearp").val();
-		var sixPr = pembulatan((((parseInt(yearPr)/2)*1.1)+25000).toFixed(2));
-		var monthPr = pembulatan((((parseInt(yearPr)/12)*1.2)+25000).toFixed(2));
-		var yearBo = pembulatan((parseInt(yearPr)/12).toFixed(2));
-		var sixBo = pembulatan(monthPr);
-		var monthBo = pembulatan((sixPr/6).toFixed(2));
+		var monthPr = 0
+		var sixPr = 0
+		var yearPr = 0
+		var yearBo = 0
+		var sixBo = 0
+		var monthBo = 0
+		var contract2 = firebase.database().ref().child("contract/"+id+"");
+		contract2.on('child_added', function(snapshot){
+			var Pr = snapshot.child("rent").val()
+			var Bo = snapshot.child("bond").val()
+			var payPlan = snapshot.child("payPlan").val()
+			if (payPlan=="monthly"){
+				monthPr = Pr
+				sixPr = pembulatan(((((((Pr*12)/1.2)-25000)/2)*1.1)+25000).toFixed(2));
+				yearPr = pembulatan((((Pr*12)/1.2)-25000).toFixed(2));
+				yearBo = pembulatan((yearPr/12).toFixed(2));
+				sixBo = pembulatan(monthPr);
+				monthBo = Bo
+			}
+			else if(payPlan=="semiannually"){
+				yearPr = pembulatan((((Pr*2)/1.1)-25000).toFixed(2));
+				sixPr = Pr
+				monthPr = pembulatan(((((((Pr*2)/1.1)-25000)/12)*1.2)+25000).toFixed(2));
+				yearBo = pembulatan((yearPr/12).toFixed(2));
+				monthBo = pembulatan((sixPr/6).toFixed(2));
+				sixBo = Bo
+			}
+			else if(payPlan=="annually"){
+				sixPr = pembulatan((((Pr/2)*1.1)+25000).toFixed(2));
+				monthPr = pembulatan((((Pr/12)*1.2)+25000).toFixed(2));
+				sixBo = pembulatan(monthPr);
+				monthBo = pembulatan((sixPr/6).toFixed(2));
+				yearPr = Pr
+				yearBo =Bo
+			}
+		})
+		
+		
 		if ($(this).find("option:selected").attr("value") == "") {
 			$("#roompricing").fadeOut(250, function() {
 				$(this).hide();
@@ -1466,6 +1560,7 @@ $(document).ready(function() {
 				$(this).show();
 			})
 		}
+
 	});
 	//extend modal price adjustment listener
 	$("#padj").on('click', function() {
@@ -1473,7 +1568,7 @@ $(document).ready(function() {
 		var prompter = prompt("Adjustment");
 		//when prompt is ok
 		if (prompter != null && prompter != "") {
-			var adjprice = parseInt($("#cprice").val()) + parseInt(prompter);
+			var adjprice = parseInt(prompter);
 			$("#fprice").html(get_fmoney(pembulatan(adjprice)));
 			$("#cfprice").val(pembulatan(adjprice));
 			if ($("#payplan").find("option:selected").attr("value") == "annually") {
@@ -1498,39 +1593,40 @@ $(document).ready(function() {
 			}
 		}
 	});
+
+	
 	//extend modal bond money adjustment listener
 	$("#badj").on('click', function() {
 		//prompt to insert value
 		var prompter = prompt("Adjustment");
 		//when prompt is ok
 		if (prompter != null && prompter != "") {
-			var adjbond = parseInt($("#cfbond").val()) + parseInt(prompter);
+			var adjbond = parseInt(prompter);
 			$("#fbond").html(get_fmoney(pembulatan(adjbond)));
 		}
 	});
 	//extend modal intend listener
 	$("#extendIntend").on('change', function() {
-		if ($("#extendIntend").val() == "") {
+		if ($("#extendIntend").val() == "" || $("#ExtendIntendAngka").val()=="") {
 			$("#ExtendendDate").html("-");
 		} else {
-			var intend = parseInt($("#extendIntend").val());
+			var intend = parseInt($("#ExtendIntendAngka").val());
 			var startDate = reformatDate2($("#ExtendstartDate").html());
-			// var startMonth = startDate[0];
-			// var startDay = startDate[1];
-			// var startYear = startDate[2];
-			// var endMonth = parseInt(startMonth)+intend;
-			// var endDay = parseInt(startDay);
-			// var endYear = parseInt(startYear);
-			// if (endMonth>12) {
-			// 	var addYear = Math.trunc(endMonth/12);
-			// 	endYear += addYear;
-			// 	endMonth = endMonth%12;
-			// }
-			// var endDate = endMonth+"/"+endDay+"/"+endYear;
-			var myDate = new Date(startDate);
-			var endDate = myDate.addMonths(intend).toString("M/d/yyyy");
-			$("#ExtendendDate").html(reformatDate(endDate));
-		
+			if ($("#extendIntend").val() == "Days"){
+				var myDate = new Date(startDate);
+				var endDate = myDate.addDays(intend).toString("M/d/yyyy");
+				$("#ExtendendDate").html(reformatDate(endDate));
+			}
+			else if($("#extendIntend").val() == "Months"){
+				var myDate = new Date(startDate);
+				var endDate = myDate.addMonths(intend).toString("M/d/yyyy");
+				$("#ExtendendDate").html(reformatDate(endDate));
+			}
+			else if($("#extendIntend").val() == "Years"){
+				var myDate = new Date(startDate);
+				var endDate = myDate.addYears(intend).toString("M/d/yyyy");
+				$("#ExtendendDate").html(reformatDate(endDate));
+			}
 		}
 	});
 	// if($("#ongoing").checked==true){
@@ -1540,10 +1636,12 @@ $(document).ready(function() {
 		if($('input#ongoing').is(':checked')){
 			$("input[name='inputAngka']").prop("disabled",true);
 			$("select[name='extendIntend']").prop("disabled",true);
+			$("#ExtendendDate").html("Ongoing")
 		}
 	else{
 		$("input[name='inputAngka']").prop("disabled",false);
 		$("select[name='extendIntend']").prop("disabled",false);
+		$("#ExtendendDate").html("-")
 	}})
 		
 	

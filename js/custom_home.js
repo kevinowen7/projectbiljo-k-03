@@ -131,6 +131,24 @@ function addInvoice() {
 		document.getElementById("invoiceDetails").appendChild(optionElement1);
 		document.getElementById("invoiceDetails").appendChild(optionElement2);
 		document.getElementById("invoiceDetails").appendChild(optionElement3);
+		paymentRef.once('value', function(snapshot){
+			var prevBalance = parseInt(snapshot.child("balance").val())
+			
+				paymentRef.update({
+					"balance": (prevBalance - invoiceAmount).toString()
+				})
+			
+		
+		})
+		paymentRef.push({
+			"date":invoiceDate,
+			"desc":invoiceDetailsFull,
+			"invoice":invoiceAmount,
+			"payment":null,
+			"refnumber":refNumberHtml,
+			"list":"ledgerList"
+		});
+		
 		//success notification
 		$.gritter.add({
 			title: 'Invoice Added',
@@ -173,6 +191,31 @@ function addPayment() {
 		var paymentDetailsFull = "Other Payment - "+paymentDetailsOther;
 	}
 	
+	paymentRef.once('value', function(snapshot){
+		if (snapshot.child("balance").val()==null){
+			var trRef1 = firebase.database().ref().child("tenant-room/"+id);
+			trRef1.once('child_added', function(snapshot) {
+				var bondPrice=snapshot.child("rent_bond").val();
+				var rent = snapshot.child("rent_price").val()
+				
+				paymentRef.set({
+					"balance": (paymentAmount-bondPrice-rent).toString()
+				})
+			
+			
+			})
+		}
+		else{
+		prevBalance = parseInt(snapshot.child("balance").val())
+			console.log("in")
+			paymentRef.update({
+				"balance": (prevBalance + paymentAmount).toString()
+			})
+		
+		}
+	})
+	
+
 	//start set payment
 	var trRef1 = firebase.database().ref().child("tenant-room/"+id);
 	trRef1.once('child_added', function(snapshot) {
@@ -1130,65 +1173,10 @@ $(document).ready(function() {
 	table4.row.add(["<a href='javaScript:void(0)'>Aleksandra Hyde</a>","101 010 500","Photo ID"]).node().id = 'incomplete1';
 	table4.row.add(["<a href='javaScript:void(0)'>Bea Curran</a>","101 010 100","Photo KK"]).node().id = 'incmplete2';
 	table4.draw();
-	
+
 	//array for search bar autocomplete
-	var tenantNames = [
-		{
-			label: "Bea Curran (101 010 100)",
-			tenantid: "t_1d",
-			refnumber: "101010100"
-		},
-		{
-			label: "Kevin Owen (101 010 300)",
-			tenantid: "t_2d",
-			refnumber: "101010300"
-		},
-		{
-			label: "Briana Holloway (101 010 200)",
-			tenantid: "t_3d",
-			refnumber: "101010200"
-		},
-		{
-			label: "Zakary Neville (101 010 400)",
-			tenantid: "t_4d",
-			refnumber: "101010400"
-		},
-		{
-			label: "Aleksandra Hyde (101 010 500)",
-			tenantid: "t_5d",
-			refnumber: "101010500"
-		},
-		{
-			label: "Amari O'Reilly (101 020 100)",
-			tenantid: "t_6d",
-			refnumber: "101020100"
-		},
-		{
-			label: "Jan Garrison (101 020 300)",
-			tenantid: "t_7d",
-			refnumber: "101020300"
-		},
-		{
-			label: "Kevin Owen (102 010 200)",
-			tenantid: "t_8d",
-			refnumber: "102010200"
-		},
-		{
-			label: "Pamela Daugherty (102 010 100)",
-			tenantid: "t_9d",
-			refnumber: "102010100"
-		},
-		{
-			label: "Vernon Kirkland (101 010 101)",
-			tenantid: "t_10d",
-			refnumber: "101010101"
-		},
-		{
-			label: "Jacob Connolly (102 020 100)",
-			tenantid: "t_11d",
-			refnumber: "102020100"
-		}
-	];
+	var tenantNames = [];
+	
 	
 	// mengambil data yang approved atau occupy dari firebase ke dalam list
 	var trRef = firebase.database().ref().child("tenant-room");

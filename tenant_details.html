@@ -350,32 +350,7 @@
 										   <div class="page-form" style="width:50%;float:right;border-right:1px;">
 												<div class="form-horizontal">
 													<div id="tenanthistory">
-														<div id="tenanthistoryperiod1" class="nav-tabs">
-															<div class="form-group" style="margin:0px -15px;">
-																<label for="period" class="control-label col-lg-3">Period</label>
-																<div class="col-lg-9">
-																	<div class="checkbox">
-																		<span id="period" name="period"></span>
-																	</div>
-																</div>
-															</div>
-															<div class="form-group" style="margin:0px -15px;">
-																<label for="bond" class="control-label col-lg-3">Bond</label>
-																<div class="col-lg-9">
-																	<div class="checkbox">
-																		<span id="bond" name="bond"></span>
-																	</div>
-																</div>
-															</div>
-															<div class="form-group" style="margin:0px -15px;">
-																<label for="payment" class="control-label col-lg-3">Payment</label>
-																<div class="col-lg-9">
-																	<div class="checkbox">
-																		<span id="payment" name="payment"></span>
-																	</div>
-																</div>
-															</div>
-														</div>
+													
 													</div>
 													<div class="form-group" style="margin:0px -15px;">
 														<div class="col-lg-offset-8 col-lg-3">
@@ -402,7 +377,7 @@
 													<option value="Debit">Debit</option>
 												</select>
 											</div>
-											<h4><a class="pull-right" style="margin-top:10px;" href="javaScript:void(0);"><u>Recurring invoice</u></a></h4>
+											<h4><a class="pull-right" style="margin-top:10px;" href="#"><u>Recurring invoice</u></a></h4>
 											</div>
 											<h3 style="margin-bottom:20px;">Bond Money Ledger</h3>
 											<div class="page-tables" style="margin-bottom:5px;">
@@ -695,14 +670,14 @@
 								<label for="extendIntend" class="control-label col-lg-3">Intended Length of Stay</label>
 								<div class="intendedLength">
 								<div class="col-md-2 angka" >
-									<input type="text" style="width: 100%" name="inputAngka" maxlength="2" type="number">
+									<input type="text" style="width: 100%" name="inputAngka" maxlength="2" type="number" id="ExtendIntendAngka">
 								</div>
 								<div class="col-md-4 jenis">
 									<select id="extendIntend" name="extendIntend" class="form-control" required>
 										<option value="">Select Contract Option</option>
-										<option value="day">Day</option>
-										<option value="month">Month</option>
-										<option value="year">Year</option>
+										<option value="Days">Days</option>
+										<option value="Months">Months</option>
+										<option value="Years">Years</option>
 										
 									</select>
 								</div>

@@ -269,6 +269,7 @@ function uploadDB() {
 	//upload to DB (tenant)
 	const dbRefTenant = firebase.database().ref("tenant");
 	const dbRefTenantRoom = firebase.database().ref("tenant-room");
+	
 	dbRefTenant.once('value', function(snapshot) {
 		if (snapshot.hasChildren()) { //tenant list filledj
 			var currCount = snapshot.child("counter").val();
@@ -283,6 +284,25 @@ function uploadDB() {
 				counter : 1
 			});
 		}
+		paymentRef = firebase.database().ref().child("payment/"+tenantID);
+		var contract = firebase.database().ref().child("contract/"+tenantID+"/"+$("#myRoomID").val()+"");
+		var sd_date = new Date(reformatDate2($("#edate").val()))
+		var ed_date = sd_date.addMonths(parseInt($("#ctoption").val())).toString("M/d/yyyy")
+		contract.push({
+			"ctrt_length": $("#ctoption").val(),
+			"refNumb":$("#roomid").html()+$("#tenantno").html(),
+			"ctrt_type":"Months",
+			"bond": rem_fmoney($("#fbond").html()),
+			"end_date":ed_date,
+			"start_date":reformatDate2($("#edate").val()),
+			"payPlan":$("#payplan").val(),
+			"rent":rem_fmoney($("#fprice").html())
+		})
+		contract.update({
+			"historyperiod":1
+		})
+		
+		
 		dbRefTenant.child(tenantID).set({
 			full_name : $("#afname").val(),
 			birth_date : reformatDate2($("#bdate").val()),
