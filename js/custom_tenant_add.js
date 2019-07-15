@@ -993,8 +993,8 @@ $(document).ready(function() {
 			var sixPr = pembulatan((((parseInt(yearPr)/2)*1.1)+25000).toFixed(2));
 			var monthPr = pembulatan((((parseInt(yearPr)/12)*1.2)+25000).toFixed(2));
 			var yearBo = pembulatan((parseInt(yearPr)/12).toFixed(2));
-			var sixBo = pembulatan(monthPr);
-			var monthBo = pembulatan((sixPr/6).toFixed(2));
+			var sixBo = pembulatan(sixPr/6);
+			var monthBo = monthPr;
 			$("#payadjt,#bondadjt").val("0");
 			if ($(this).find("option:selected").attr("value") == "") {
 				$("#roompricing").fadeOut(250, function() {

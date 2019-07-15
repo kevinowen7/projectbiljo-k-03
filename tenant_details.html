@@ -190,7 +190,8 @@
 								<div id="content" class="container">
 									<div class="row" style="margin-bottom:8px;">
 										<div class="col-lg-6 pull-left">
-											<h2><span id="tenant_name"></span> (<span id="tenant_id"></span>)</h2>
+											<h2><span id="tenant_name"></span> (<span id="tenant_id"></span>) <label id="contract_details" style="color: crimson"></label></h2>
+											
 										</div>
 										<div class="col-lg-1 pull-right">
 											<a href="img/tenant.jpg" class="prettyphoto"><img src="img/tenant_thumb.jpg" class="img-thumbnail" alt="tenant image" height="200%"/></a>
@@ -353,9 +354,12 @@
 													
 													</div>
 													<div class="form-group" style="margin:0px -15px;">
-														<div class="col-lg-offset-8 col-lg-3">
+														<div class="col-lg-offset-5 col-lg-8">
 															<button id="extender" type="button" class="btn btn-xs btn-success"><i class="fa fa-plus"></i> Extend</button>
+															<button id="end" type="button" class="btn btn-xs btn-danger" onclick="endContractModal()"><i class="fa fa-times"></i> End Contract</button>
+															<button id="nonactive" type="button" class="btn btn-xs btn-warning" onclick="nonactiveModal()"><i class="fa fa-minus"></i> Non-Active</button>
 														</div>
+														
 													</div>
 												</div>
 										   </div>
@@ -486,7 +490,6 @@
 								<div class="col-lg-5">
 									<select id="invoiceDetails" name="invoiceDetails" class="form-control" required>
 										<option value="">Select Details</option>
-										<option value="rentdue">Rental Due</option>
 										<option value="finedue">Fine Due</option>
 										<option value="otherdue">Other Due</option>
 									</select>
@@ -578,6 +581,46 @@
 				</div>
 			</div>
 		</div>
+		<!--End contract Modal-->
+		<div id="endModal" class="modal fade" tabindex="-1" role="dialog" aria-hidden="true">
+			<div class="modal-dialog">
+				<div class="modal-content">
+					<div class="modal-header">
+						<button type="button" class="close" data-dismiss="modal" aria-hidden="true">x	</button>
+						<h4 class="modal-title">End Contract</h4>
+					</div>
+					<div class="modal-body">
+					<!-- body -->
+						<span id="endM"></span>
+						<span id="tenantM"></span>
+					</div>
+					<div class="modal-footer">
+						<button type="button" class="btn btn-default btn-sm" data-dismiss="modal" aria-hidden="true">Cancel</button>
+						<button id="submitEnd" type="button" class="btn btn-danger btn-sm" data-dismiss="modal" aria-hidden="true">End Contract</button>
+					</div>
+				</div>
+			</div>
+		</div>
+		<!--NonActive contract Modal-->
+		<div id="nonActiveModal" class="modal fade" tabindex="-1" role="dialog" aria-hidden="true">
+			<div class="modal-dialog">
+				<div class="modal-content">
+					<div class="modal-header">
+						<button type="button" class="close" data-dismiss="modal" aria-hidden="true">x	</button>
+						<h4 class="modal-title">Non-Active</h4>
+					</div>
+					<div class="modal-body">
+					<!-- body -->
+						<span id="nonactiveM"></span>
+						<span id="tenantM"></span>
+					</div>
+					<div class="modal-footer">
+						<button type="button" class="btn btn-default btn-sm" data-dismiss="modal" aria-hidden="true">Cancel</button>
+						<button id="submitNonActive" type="button" class="btn btn-danger btn-sm" data-dismiss="modal" aria-hidden="true">Non Active</button>
+					</div>
+				</div>
+			</div>
+		</div>
 		<!-- Extend Modal -->
 		<div id="extendModal" class="modal fade" tabindex="-1" role="dialog" aria-hidden="true">
 			<div class="modal-dialog">
@@ -615,6 +658,41 @@
 								<div class="col-lg-2">
 									<div class="checkbox">
 										<span id="extendRoomNo" name="extendRoomNo">-</span>
+									</div>
+								</div>
+							</div>
+						
+							<div class="form-group" style="margin:0px -10px;">
+								<label for="extendIntend" class="control-label col-lg-3">Intended Length of Stay</label>
+								<div class="intendedLength">
+								<div class="col-md-2 angka" >
+									<input type="text" style="width: 100%" name="inputAngka" maxlength="2" type="number" id="ExtendIntendAngka">
+								</div>
+								<div class="col-md-4 jenis">
+									<select id="extendIntend" name="extendIntend" class="form-control" required>
+										<option value="">Select Contract Option</option>
+										<option value="Days">Days</option>
+										<option value="Months">Months</option>
+										<option value="Years">Years</option>
+										
+									</select>
+								</div>
+								<div class="col-md-2 checklist">
+									<input id="ongoing" name="ongoing" type="checkbox"> Ongoing
+								</div>
+							</div>
+							</div>
+							<div class="form-group" style="margin:0px -10px;" >
+								<label for="startDate" class="control-label col-lg-3">Starting Date</label>
+								<div class="col-lg-2">
+									<div class="checkbox">
+										<span id="ExtendstartDate" name="period"></span>
+									</div>
+								</div>
+								<label for="endDate" class="control-label col-lg-3">End Date</label>
+								<div class="col-lg-2">
+									<div class="checkbox">
+										<span id="ExtendendDate" name="period">-</span>
 									</div>
 								</div>
 							</div>
@@ -663,40 +741,6 @@
 											<span id="fbond" name="fbond">-</span>
 											<input id="cfbond" name="cfbond" type="hidden" value="" readonly>
 										</div>
-									</div>
-								</div>
-							</div>
-							<div class="form-group" style="margin:0px -10px;">
-								<label for="extendIntend" class="control-label col-lg-3">Intended Length of Stay</label>
-								<div class="intendedLength">
-								<div class="col-md-2 angka" >
-									<input type="text" style="width: 100%" name="inputAngka" maxlength="2" type="number" id="ExtendIntendAngka">
-								</div>
-								<div class="col-md-4 jenis">
-									<select id="extendIntend" name="extendIntend" class="form-control" required>
-										<option value="">Select Contract Option</option>
-										<option value="Days">Days</option>
-										<option value="Months">Months</option>
-										<option value="Years">Years</option>
-										
-									</select>
-								</div>
-								<div class="col-md-2 checklist">
-									<input id="ongoing" name="ongoing" type="checkbox"> Ongoing
-								</div>
-							</div>
-							</div>
-							<div class="form-group" style="margin:0px -10px;" >
-								<label for="startDate" class="control-label col-lg-3">Starting Date</label>
-								<div class="col-lg-2">
-									<div class="checkbox">
-										<span id="ExtendstartDate" name="period"></span>
-									</div>
-								</div>
-								<label for="endDate" class="control-label col-lg-3">End Date</label>
-								<div class="col-lg-2">
-									<div class="checkbox">
-										<span id="ExtendendDate" name="period">-</span>
 									</div>
 								</div>
 							</div>

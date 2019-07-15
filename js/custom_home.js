@@ -2,7 +2,7 @@
 var table1 = $('#booking-list').DataTable({
 	"aLengthMenu": [[3, 6, -1], [3, 6, "All"]],
 	"iDisplayLength": 3,
-	"order": [],
+	"order": [[2,"desc"]],
 	"columnDefs": [
 	{
 		targets: -1,
@@ -10,12 +10,13 @@ var table1 = $('#booking-list').DataTable({
 	},
 	{
 		targets: 0,
-		width: "10%",
+		width: "20%",
 		orderable:false
 	},
 	{
 		targets: 1,
-		className: 'dt-body-left'
+		className: 'dt-body-left',
+		width:"20%"
 	}
 	]
 })	
@@ -105,7 +106,12 @@ function reformatDate2(inputDate) {
 	
 }
 
-
+function date_diff_indays(d1, d2) {
+	
+	var diff = Date.parse(d2) - Date.parse(d1);
+	return Math.floor(diff / 86400000);
+	
+}
 
 function addInvoice() {
 	
@@ -118,6 +124,7 @@ function addInvoice() {
 		$('#addInvoiceForm').trigger("reset");
 		$("#invoiceDetailsOtherBlock").hide();
 		$("#invoiceRecurrentBlock").show();
+		paymentRef = firebase.database().ref().child("payment/"+id);
 		removeOptions(document.getElementById("invoiceDetails"));
 		var optionElement1 = document.createElement("option");
 		var optionElement2 = document.createElement("option");
@@ -891,13 +898,14 @@ $(document).ready(function() {
 			var refNumFormat = snapshot.child("ref_number").val();
 			var refN=refNumFormat.split(" ");
 			var refNumber=refN[0]+refN[1]+refN[2];
-			propAddr = shortenString(propAddr,20);
+			propAddr = shortenString(propAddr,10);
 			var tenantRef = firebase.database().ref().child("tenant/"+tenantID);
 			var tenantName;
 			tenantRef.once('value', function(snapshot) {
 				table1.clear();
 				// get name from database
 				tenantName=snapshot.child("full_name").val();
+				tenantName = shortenString(tenantName,8);
 				// jika status = approved
 				if (statOccupy=="approved"){
 					// untuk sort , datanya dimasukan ke list
@@ -933,7 +941,7 @@ $(document).ready(function() {
 			//get starting date , building address , status occupy, ref id
 			var statingDate=snapshot.child("start_date").val();
 			var propAddr=snapshot.child("prop_addr").val();
-			propAddr = shortenString(propAddr,20);
+			propAddr = shortenString(propAddr,10);
 			var statOccupy=snapshot.child("stat_occupy").val();
 			var refNumFormat = snapshot.child("ref_number").val();
 			var refN=refNumFormat.split(" ");
@@ -944,6 +952,7 @@ $(document).ready(function() {
 				table1.clear();
 				// get name from database
 				tenantName=snapshot.child("full_name").val();
+				tenantName = shortenString(tenantName,8);
 				// remove row changed
 				var row = table1.row('#booking'+refNumber);
 				row.remove();
@@ -1003,7 +1012,7 @@ $(document).ready(function() {
 	var table6 = $('#keyC-list').DataTable({
 		"aLengthMenu": [[3, 6, -1], [3, 6, "All"]],
 		"iDisplayLength": 3,
-		"order": [],
+		"order": [[2,"desc"]],
 		"columnDefs": [
 		{
 			targets: 0,
@@ -1012,6 +1021,10 @@ $(document).ready(function() {
 		{
 			targets: -1,
 			width: "10%"
+		},
+		{
+			targets: 1,
+			width: "20%"
 		},
 		]
 	})
@@ -1045,6 +1058,7 @@ $(document).ready(function() {
 				trRef2=firebase.database().ref().child("tenant/"+tenantID);
 				trRef2.once('value', function(snapshot) {
 					var name = snapshot.child("full_name").val();
+					name = shortenString(name,8);
 					table6.row.add(["<a href='tenant_details.html?id="+tenantID+"' class='pull-left'>"+name+"</a>",refN,statingDate,"<a href='#' ondblclick='editKeyCollectDateModal(\""+keyDate+"\",\""+tenantID+"\",\""+refNumber+"\",\""+note1+"\")'>"+keyDate+" "+noteIcon+"</a>","<button class='btn btn-xs btn-success' title='Mail Tenant' onclick=mailTenantKey('"+tenantID+"','"+refNumber+"')><i class='fa fa-envelope'></i></button> <button class='btn btn-xs btn-primary' title='Collected' onclick=collectedKey('"+tenantID+"','"+refNumber+"')><i class='fa fa-check'></i></button>"]).node().id = "key"+tenantID;
 					table6.draw();
 					$(".tip").tip();
@@ -1075,6 +1089,7 @@ $(document).ready(function() {
 				trRef2=firebase.database().ref().child("tenant/"+tenantID);
 				trRef2.once('value', function(snapshot) {
 					var name = snapshot.child("full_name").val();
+					name = shortenString(name,8);
 					table6.row.add(["<a href='javaScript:void(0)' class='pull-left'>"+name+"</a>",refN,statingDate,"<a href='#' ondblclick='editKeyCollectDateModal(\""+keyDate+"\",\""+tenantID+"\",\""+refNumber+"\",\""+note1+"\")'>"+keyDate+" "+noteIcon+"</a>","<button class='btn btn-xs btn-success' title='Mail Tenant' onclick=mailTenantKey('"+tenantID+"','"+refNumber+"')><i class='fa fa-envelope'></i></button> <button class='btn btn-xs btn-primary' title='Collected' onclick=collectedKey('"+tenantID+"','"+refNumber+"')><i class='fa fa-check'></i></button>"]).node().id = "key"+tenantID;
 					table6.draw();
 					$(".tip").tip();
@@ -1102,9 +1117,9 @@ $(document).ready(function() {
 	var overdueRef = firebase.database().ref().child("payment");
 	overdueRef.on('child_added', function(snapshot) {
 		var balance = snapshot.child("balance").val();
-		
+		var recurringD = snapshot.child("recurring").val();
 		//validasi jika balance balance !=0
-		if (balance>0){
+		if (balance<0){
 			var tenantID = snapshot.key;
 			overdueRef1 = firebase.database().ref().child("tenant-room/"+tenantID);
 			// child added
@@ -1113,12 +1128,26 @@ $(document).ready(function() {
 				var refN = snapshot.child("ref_number").val();
 				var statOccupy = snapshot.child("stat_occupy").val();
 				if ((statOccupy=="approved") ||(statOccupy=="active")){
-					overdueRef2=firebase.database().ref().child("tenant/"+tenantID);
-					overdueRef2.once('value', function(snapshot) {
-						var name = snapshot.child("full_name").val();
-						table2.row.add(["<a href='tenant_details.html?id="+tenantID+"'>"+name+"</a>",refN,"12/17/2018"]).node().id = 'over'+tenantID;
-						table2.draw();
-					});
+					//mengampil pay plan
+					var pay_plan = snapshot.child("pay_plan").val();
+					if(pay_plan=="monthly"){
+						pay_plan=-1;
+					} else if (pay_plan=="semiannually"){
+						pay_plan=-6;
+					} else if (pay_plan=="annually"){
+						pay_plan=-12;
+					}
+					var overdueDate = sumMonth(recurringD,pay_plan);
+					
+					//validasi dengan tanggal hari ini
+					if (!dateToday_diff(overdueDate)){
+						overdueRef2=firebase.database().ref().child("tenant/"+tenantID);
+						overdueRef2.once('value', function(snapshot) {
+							var name = snapshot.child("full_name").val();
+							table2.row.add(["<a href='tenant_details.html?id="+tenantID+"'>"+name+"</a>",refN,reformatDate(overdueDate)]).node().id = 'over'+tenantID;
+							table2.draw();
+						});
+					}
 				}
 			});
 			// child changed
@@ -1129,12 +1158,26 @@ $(document).ready(function() {
 				var refN = snapshot.child("ref_number").val();
 				var statOccupy = snapshot.child("stat_occupy").val();
 				if ((statOccupy=="approved") ||(statOccupy=="active")){
-					overdueRef2=firebase.database().ref().child("tenant/"+tenantID);
-					overdueRef2.once('value', function(snapshot) {
-						var name = snapshot.child("full_name").val();
-						table2.row.add(["<a href='tenant_details.html?id="+tenantID+"'>"+name+"</a>",refN,"12/17/2018"]).node().id = 'over'+tenantID;
-						table2.draw();
-					});
+					//mengampil pay plan
+					var pay_plan = snapshot.child("pay_plan").val();
+					if(pay_plan=="monthly"){
+						pay_plan=-1;
+					} else if (pay_plan=="semiannually"){
+						pay_plan=-6;
+					} else if (pay_plan=="annually"){
+						pay_plan=-12;
+					}
+					var overdueDate = sumMonth(recurringD,pay_plan);
+					
+					//validasi dengan tanggal hari ini
+					if (!dateToday_diff(overdueDate)){
+						overdueRef2=firebase.database().ref().child("tenant/"+tenantID);
+						overdueRef2.once('value', function(snapshot) {
+							var name = snapshot.child("full_name").val();
+							table2.row.add(["<a href='tenant_details.html?id="+tenantID+"'>"+name+"</a>",refN,reformatDate(overdueDate)]).node().id = 'over'+tenantID;
+							table2.draw();
+						});
+					}
 				}
 			});
 		}
@@ -1144,7 +1187,7 @@ $(document).ready(function() {
 	var table3 = $('#aexpired-list').DataTable({
 		"aLengthMenu": [[3, 6, -1], [3, 6, "All"]],
 		"iDisplayLength": 3,
-		"order": [[ 2, "desc" ]],
+		"order": [[ 2, "asc" ]],
 		"columnDefs": [
 		{
 			targets: 0,
@@ -1152,10 +1195,53 @@ $(document).ready(function() {
 		},
 		]
 	})
+
+	// get data from database
+	var contractRef = firebase.database().ref("contract");
+	var tenantRoomRef = firebase.database().ref("tenant-room");
+	var tenantRef = firebase.database().ref("tenant");
+	var d = new Date();
+    //var todayDate = (parseInt(d.getMonth())+1)+"/"+d.getDate()+"/"+d.getFullYear();
+    var todayDate = Date.today().addDays(20).toString("MM/dd/yyyy")
+	var listTenant = [];
+	contractRef.on('child_added', function(snapshot) {
+		var tenantID = snapshot.key;
+		contractRef.child(tenantID).on('child_added', function(snapshot) {
+			// get tenant data
+			var roomID = snapshot.key;
+			contractRef.child(tenantID+"/"+roomID).on('child_added', function(snapshot) {
+				if (snapshot.key != "historyperiod" && snapshot.key!="status") {
+					var endDate = snapshot.child("end_date").val();
+					if ((endDate != "Ongoing") && (date_diff_indays(todayDate,endDate) >= 0)) {
+						tenantRoomRef.child(tenantID+"/"+roomID).once('value', function(snapshot) {
+							var refNumFormat = snapshot.child("ref_number").val();
+							var refN = refNumFormat.split(" ");
+							var refNumber = refN[0]+refN[1]+refN[2];
+							tenantRef.child(tenantID).once('value', function(snapshot) {
+								tenantName = snapshot.child("full_name").val();
+								name = shortenString(tenantName,15);
+								tenantObj = {
+									"tenant_id":tenantID,
+									"refNum":refNumber,
+									"content":["<a href='tenant_details.html?id="+tenantID+"' class='pull-left'>"+name+"</a>",refNumFormat,reformatDate(endDate)],
+								}
+								listTenant.push(tenantObj);
+								
+								// insert data into table
+								table3.clear();
+								for (i=0; i<listTenant.length; i++) {
+									table3.row.add(listTenant[i].content).node().id = listTenant[i].tenant_id;
+								}
+								table3.draw();
+							});
+						});
+					}
+				}
+			});
+		});
+	});
+
 	
-	table3.row.add(["<a href='javaScript:void(0)'>Bea Curran</a>","101 010 100","9/20/2018"]).node().id = 'almost1';
-	table3.row.add(["<a href='javaScript:void(0)'>Briana Holloway</a>","101 010 200","9/28/2018"]).node().id = 'almost2';
-	table3.draw();
 	
 	//imcomplete tenant
 	var table4 = $('#incomplete-list').DataTable({
@@ -1623,6 +1709,6 @@ $(document).ready(function() {
 		$("#cover-spin").fadeOut(250, function() {
 			$(this).hide();
 		})
-	}, 1000);
+	}, 60000);
 	
 })

@@ -22,14 +22,14 @@ var table = $('#data-table1').DataTable({
 	{
 		targets: 3,
 		orderData: [3,0,1],
-		class: "cptprice"
+		className:"cptprice"
 	},
 	{
 		targets: 4,
 		orderData: [4,0,1],
 	},
 	{
-		targets: [3,4],
+		targets: [4],
 		render: $.fn.dataTable.render.number( '.', ',', 0, 'Rp. ',',-' )
 	},
 	{
@@ -189,6 +189,19 @@ function removeRoom(roomID) {
 	
 }
 
+function get_fmoney(money) {
+	
+	var rev     = parseInt(money, 10).toString().split('').reverse().join('');
+	var rev2    = '';
+	for(var i = 0; i < rev.length; i++){
+		rev2  += rev[i];
+		if((i + 1) % 3 === 0 && i !== (rev.length - 1)){
+			rev2 += '.';
+		}
+	}
+	return ("Rp. "+rev2.split('').reverse().join('') + ',-')
+	
+}
 
 function countTotalDue() {
 	
@@ -368,6 +381,12 @@ function sortArrayByDate(oldArray) {
 	return newArray;
 	
 }
+
+
+
+// function editPriceModal(){
+// 	$("#modalRoomPrice").modal()
+// }
 
 var bondList=[];
 var idExpense=1;
@@ -719,7 +738,7 @@ $(document).ready(function() {
 									kitchn = "";
 								}
 								facilities = bed+" "+wardrb+" "+tble+" "+bthins+" "+wifi+" "+ctv+" "+hwater+" "+parker+" "+laundy+" "+pwrtkn+" "+ac+" "+bedcvr+" "+secury+" "+kitchn;
-								table.row.add([floornumb,"<a id='"+roomid+"' href='javaScript:void(0);' onclick='editRoom("+roomid+")'>"+roomnumb+"</a>",facilities,price,bondmoney,availdate,"<button id='addbutt' class='btn btn-xs btn-info' title='Add Tenant'><i class='fa fa-user-plus'></i></button> <button id='roomhstry' class='btn btn-xs btn-black' title='Room History' onclick='roomHist("+roomid+")'><i class='fa fa-file-text-o'></i></button> <button id='editbutt' class='btn btn-xs btn-warning' title='Edit Room' onclick='editRoom("+roomid+")'><i class='fa fa-pencil'></i></button> <button id='removebutt' class='btn btn-xs btn-danger' title='Remove Room' onclick='removeRoom("+roomid+")'><i class='fa fa-times'></i></button>"]).node().id = 'f'+floornumb+'r'+roomnumb;
+								table.row.add([floornumb,"<a id='"+roomid+"' href='javaScript:void(0);' onclick='editRoom("+roomid+")'>"+roomnumb+"</a>",facilities,get_fmoney(price),bondmoney,availdate,"<button id='addbutt' class='btn btn-xs btn-info' title='Add Tenant'><i class='fa fa-user-plus'></i></button> <button id='roomhstry' class='btn btn-xs btn-black' title='Room History' onclick='roomHist("+roomid+")'><i class='fa fa-file-text-o'></i></button> <button id='editbutt' class='btn btn-xs btn-warning' title='Edit Room' onclick='editRoom("+roomid+")'><i class='fa fa-pencil'></i></button> <button id='removebutt' class='btn btn-xs btn-danger' title='Remove Room' onclick='removeRoom("+roomid+")'><i class='fa fa-times'></i></button>"]).node().id = 'f'+floornumb+'r'+roomnumb;
 								table.draw(false);
 								if (parseInt(floornumb)%2 == 1) {
 									$('#f'+floornumb+'r'+roomnumb).css("background-color","#D6F6FF");
@@ -827,7 +846,7 @@ $(document).ready(function() {
 									kitchn = "";
 								}
 								facilities = bed+" "+wardrb+" "+tble+" "+bthins+" "+wifi+" "+ctv+" "+hwater+" "+parker+" "+laundy+" "+pwrtkn+" "+ac+" "+bedcvr+" "+secury+" "+kitchn;
-								table.row.add([floornumb,"<a id='"+roomid+"' href='javaScript:void(0);' onclick='editRoom("+roomid+")'>"+roomnumb+"</a>",facilities,price,bondmoney,availdate,"<button id='addbutt' class='btn btn-xs btn-info' title='Add Tenant'><i class='fa fa-user-plus'></i></button> <button id='roomhstry' class='btn btn-xs btn-black' title='Room History'><i class='fa fa-file-text-o'></i></button> <button id='editbutt' class='btn btn-xs btn-warning' title='Edit Room' onclick='editRoom("+roomid+")'><i class='fa fa-pencil'></i></button> <button id='removebutt' class='btn btn-xs btn-danger' title='Remove Room' onclick='removeRoom("+roomid+")'><i class='fa fa-times'></i></button>"]).node().id = 'f'+floornumb+'r'+roomnumb;
+								table.row.add([floornumb,"<a id='"+roomid+"' href='javaScript:void(0);' onclick='editRoom("+roomid+")'>"+roomnumb+"</a>",facilities,get_fmoney(price),bondmoney,availdate,"<button id='addbutt' class='btn btn-xs btn-info' title='Add Tenant'><i class='fa fa-user-plus'></i></button> <button id='roomhstry' class='btn btn-xs btn-black' title='Room History'><i class='fa fa-file-text-o'></i></button> <button id='editbutt' class='btn btn-xs btn-warning' title='Edit Room' onclick='editRoom("+roomid+")'><i class='fa fa-pencil'></i></button> <button id='removebutt' class='btn btn-xs btn-danger' title='Remove Room' onclick='removeRoom("+roomid+")'><i class='fa fa-times'></i></button>"]).node().id = 'f'+floornumb+'r'+roomnumb;
 								table.draw(false);
 								if (parseInt(floornumb)%2 == 1) {
 									$('#f'+floornumb+'r'+roomnumb).css("background-color","#D6F6FF");
@@ -923,35 +942,101 @@ $(document).ready(function() {
 		$(this).hide();
 		})
 	})
-	
-	//price listener
+
 	$('#data-table1 tbody').on('dblclick', '.cptprice', function () {
-		//get row data
 		var row = table.row($(this).parents('tr'));
-        var data = row.data();
-		//prompt to insert value
-		var prompter = prompt("Change value (Rp.)", data[3]);
-		//when prompt is ok
-		if (prompter != null) {
-			//variables for reference
-			var buildno = $("#buildNo").val();
-			for(j=1; j<=9; j++) {
-				if (buildno==String(j)) {
-					buildno="0"+String(j);
-				}
+		var data = row.data();
+		$("#modalRoomPrice").modal()
+		$("#confirmPriceAdjt").click(function() {
+			$("#adjustmentPriceForm").submit();
+		})
+		//key date edit form validation
+		$("#adjustmentPriceForm").validate({
+			submitHandler: function() {
+				$('#modalRoomPrice').modal('hide');
+				$("#cover-spin").fadeIn(250, function() {
+					$(this).show();
+				});
+				editPrice(data);
 			}
-			var floorno = data[0];
-			var roomID = data[1].split("id='")[1].split("'")[0];
-			var roundPrice = (Math.round((parseInt(prompter)/100)))*100;
-			var dbRef = firebase.database().ref().child("property/residential/building_no:"+buildno+"/floor:"+floorno+"/ID:"+roomID);
-			//update price to database
-			dbRef.update({
-				yearprice : roundPrice
-			}).catch(function onError(err) {
-				window.alert("Error "+err.code+" : "+err.message);
-			})
-		}
+		})
 	})
+
+	$("#priceAdjustment").on('keyup change', function() {
+		$("#priceAdjustment").val(get_moneydot($("#priceAdjustment").val()));
+	});
+
+function editPrice(data){
+	var price = rem_moneydot($("#priceAdjustment").val())
+	if (price != null) {
+		//variables for reference
+		var buildno = $("#buildNo").val();
+		for(j=1; j<=9; j++) {
+			if (buildno==String(j)) {
+				buildno="0"+String(j);
+			}
+		}
+		var floorno = data[0];
+		var roomID = data[1].split("id='")[1].split("'")[0];
+		var roundPrice = (Math.round((parseInt(price)/100)))*100;
+		var dbRef = firebase.database().ref().child("property/residential/building_no:"+buildno+"/floor:"+floorno+"/ID:"+roomID);
+		//update price to database
+		dbRef.update({
+			yearprice : roundPrice
+		}).then(function onSuccess(res) {
+			//success notification
+			$.gritter.add({
+				title: 'Price Edited',
+				text: "Price successfully edited",
+				image: './img/bell.png',
+				sticky: false,
+				time: 3500,
+				class_name: 'gritter-custom'
+			});
+			//stop loading icon
+			$("#cover-spin").fadeOut(250, function() {
+				$(this).hide();
+			});
+		}).catch(function onError(err) {
+			window.alert("Error "+err.code+" : "+err.message);
+		})
+	}
+	$("#cover-spin").fadeOut(250, function() {
+		$(this).hide();
+	});
+}
+$("#modalRoomPrice").draggable({
+	handle: ".modal-header"
+});
+
+	//price listener
+	// $('#data-table1 tbody').on('dblclick', '.cptprice', function () {
+	// 	//get row data
+	// 	var row = table.row($(this).parents('tr'));
+  //       var data = row.data();
+	// 	//prompt to insert value
+	// 	var prompter = prompt("Change value (Rp.)", data[3]);
+	// 	//when prompt is ok
+	// 	if (prompter != null) {
+	// 		//variables for reference
+	// 		var buildno = $("#buildNo").val();
+	// 		for(j=1; j<=9; j++) {
+	// 			if (buildno==String(j)) {
+	// 				buildno="0"+String(j);
+	// 			}
+	// 		}
+	// 		var floorno = data[0];
+	// 		var roomID = data[1].split("id='")[1].split("'")[0];
+	// 		var roundPrice = (Math.round((parseInt(prompter)/100)))*100;
+	// 		var dbRef = firebase.database().ref().child("property/residential/building_no:"+buildno+"/floor:"+floorno+"/ID:"+roomID);
+	// 		//update price to database
+	// 		dbRef.update({
+	// 			yearprice : roundPrice
+	// 		}).catch(function onError(err) {
+	// 			window.alert("Error "+err.code+" : "+err.message);
+	// 		})
+	// 	}
+	// })
 	//add tenant listener
 	$('#data-table1 tbody').on('click', '#addbutt', function () {
 		var row = table.row($(this).parents('tr'));
