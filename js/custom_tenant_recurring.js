@@ -27,13 +27,45 @@ $(document).ready(function() {
 		}
 		]
 	})
+
+	function get_fmoney(money) {
 	
-	table.row.add(["<a href='javaScript:void(0)'>01</a>","Rental Due","Rp. 2.000.000,-","Rental Due","Monthly",null]).node().id = 'booking1';
-	table.row.add(["<a href='javaScript:void(0)'>02</a>","Fine Due","Rp. 100.000,-","FINE 10%","One Time Only",null]).node().id = 'booking2';
-	table.row.add(["<a href='javaScript:void(0)'>03</a>","Other Due","Rp. 250.000,-","Lamp & Wall Repair Invoice","One Time Only",null]).node().id = 'booking3';
+		var rev     = parseInt(money, 10).toString().split('').reverse().join('');
+		var rev2    = '';
+		for(var i = 0; i < rev.length; i++){
+			rev2  += rev[i];
+			if((i + 1) % 3 === 0 && i !== (rev.length - 1)){
+				rev2 += '.';
+			}
+		}
+		return ("Rp. "+rev2.split('').reverse().join('') + ',-')
+		
+	}
+
+	id2 = window.location.href.split('=')[1];
+	id = id2.split("#")[0];
+	rentprice=window.location.href.split('/=')[1];
+	payplan=window.location.href.split('/=')[2];
+
+	table.row.add(["<a href='javaScript:void(0)'>01</a>","Rental Due",get_fmoney(rentprice),"Rental Due",payplan,null]).node().id = 'booking1';
 	table.draw();
+
+	tenant=firebase.database().ref().child("tenant/"+id);
+	tenantroom=firebase.database().ref().child("tenant-room/"+id);
 	
 	
+	tenantroom.on("child_added", function(snapshot){
+		refNumb=snapshot.child("ref_number").val()
+		$("#tenant_id").html(refNumb)
+	})
+
+	tenant.on("value", function(snapshot){
+		full_name=snapshot.child("full_name").val()
+		$("#tenant_name").html(full_name)
+	})
+
+	
+
 	setTimeout(function(){
 		//stop loading icon
 		$("#cover-spin").fadeOut(250, function() {

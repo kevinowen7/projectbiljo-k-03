@@ -223,6 +223,15 @@ function countTotalBondReceived() {
 	
 }
 
+function recurringPage(){
+	var rent=$("#payment1").text()
+	rent2=rent.split("paid")[0]
+	payplan=rent.split("paid ")[1]
+	payplan2=payplan.split(" Electricity")[0]
+	rent = rem_fmoney(rent2).toString()
+	window.location='tenant_recurring.html?id='+id+'/='+rent+'/='+payplan2;
+}
+
 function countBondBalance() {
 	
 	var balance = 0;
@@ -1399,6 +1408,8 @@ function extendTenant() {
 }
 
 
+
+
 $(window).scroll(function(){
 	if ($(this).scrollTop() > 350) {
 		$('#btnpayin').addClass('fixed');
@@ -1455,11 +1466,11 @@ $(document).ready(function() {
 			endDate2=new Date(endDate5)
 			endDate3=endDate2.addDays(1).toString("M/d/yyyy")	
 			endDate4=reformatDate(endDate3)
-			$("#ExtendstartDate").html(endDate4);														
+															
 		}
 		else{
 			endDate = snapshot.child("end_date").val()
-			$("#ExtendstartDate").html(startDate);														
+																	
 		}	
 		// $("#yearp").val(rentPrice);
 		// $("#payment").html(rentPrice+" paid "+payPlan+"  <strong>Electricity</strong> included /month");
@@ -1493,6 +1504,7 @@ $(document).ready(function() {
 	</div>
 </div>
 `
+
 $("#tenanthistory").append(data)
 --historyperiod
 	})
@@ -1504,7 +1516,23 @@ setTimeout(() => {
 		$("#contract_details").append(" Contract Ended")
 		$("#end").hide()
 	}
-}, 5000);
+	startdate=$("#period1").text().split("- ")[1]
+	console.log(startdate)
+	if (startdate!="Ongoing"){
+		startdate=reformatDate2(startdate)
+		startdate2=new Date(startdate)
+		startdate3=reformatDate(startdate2.addDays(1).toString("MM/dd/yyyy"))
+		console.log(startdate3)
+		$("#ExtendstartDate").html(startdate3);		
+	}
+	else{
+		startdate3=reformatDate(Date.today().toString("MM/dd/yyyy"))
+		$("#ExtendstartDate").html(startdate3);	
+	}
+
+
+}, 6000);
+
 
 
 	

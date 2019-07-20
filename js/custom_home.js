@@ -113,6 +113,25 @@ function date_diff_indays(d1, d2) {
 	
 }
 
+function dateToday_diff(d1) {
+	var today =  new Date();
+	var diff = Date.parse(today) - Date.parse(d1);
+	if (Math.floor(diff / 86400000)<0){
+		return true;
+	} else {
+		return false;
+	}
+}
+
+function sumMonth(date,month) {
+  var d = new Date(date);
+  d.setMonth(d.getMonth()+month);
+  newDate = String(d).split(" ")
+  var endMonth = newDate[1];
+  var endDay = newDate[2];
+  var endYear = newDate[3];
+  return reformatDate2(endDay+"-"+endMonth+"-"+endYear);
+}
 function addInvoice() {
 	
 	setTimeout(function(){
